@@ -1,0 +1,15 @@
+version: '3'
+services:
+    app:
+        container_name: ptz_news
+        volumes:
+            - "/home/pi/ptz_news/logs:/usr/src/app/logs"
+        build: .
+        restart: unless-stopped
+        platform: linux/arm/v7
+
+
+
+
+
+
