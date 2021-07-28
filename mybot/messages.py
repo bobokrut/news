@@ -4,7 +4,7 @@ from typing import Literal as _Literal
 from typing import Union as _Union
 
 
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class TextMessage:
 
     message_id: int
@@ -12,40 +12,22 @@ class TextMessage:
     chat_id: int
     text: str
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
 
-
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class CallbackMessage:
 
     chat_id: int
     callback_data: str
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
 
-
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class PollMessage:
 
     poll_id: str
     polls: _List[str]
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
 
-
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class SendMessage:
     '''
     api_params:
@@ -63,18 +45,12 @@ class SendMessage:
     allow_sending_without_reply: _Union[bool, None] = None
     reply_markup: _Union[str, None] = None
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
-
     def values(self):
 
         return {key: value for key, value in self.__dict__.items() if value}
 
 
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class EditMessageText:
     '''
     api_params:
@@ -90,18 +66,12 @@ class EditMessageText:
     reply_markup: _Union[str, None] = None
     parse_mode: _Union[_Literal['MarkdownV2', 'HTML', 'Markdown'], None] = None
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
-
     def values(self):
 
         return {key: value for key, value in self.__dict__.items() if value}
 
 
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class SendPoll:
     '''
         api_params:
@@ -138,28 +108,16 @@ class SendPoll:
     reply_markup: _Union[str, None] = None
     explanation_parse_mode: _Union[_Literal['MarkdownV2', 'HTML', 'Markdown'], None] = None
 
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
-
     def values(self):
 
         return {key: value for key, value in self.__dict__.items() if value}
 
 
-@_dataclass(init=True)
+@_dataclass(init=True, repr=True, eq=False)
 class DeleteMessage:
 
     chat_id: int
     message_id: int
-
-    def __repr__(self):
-        r = []
-        for k, v in self.__dict__.items():
-            r.append(f'{k.capitalize()}: {v}\n')
-        return ''.join(r)
 
     def values(self):
 

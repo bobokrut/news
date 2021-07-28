@@ -10,18 +10,7 @@ try:
 
 except ModuleNotFoundError:
 
-    import logging
-    logger: logging.Logger = logging.getLogger(__name__)
-
-    logger.setLevel(logging.DEBUG)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s - %(message)s')
-    ch.setFormatter(formatter)
-
-    logger.addHandler(ch)
+    raise ModuleNotFoundError
 
 
 class BotException(Exception):
@@ -35,18 +24,19 @@ class BotTypeError(TypeError):
 
 class Bot(Keyboard):
 
-    def __init__(self, token: str, escape_chars: Union[list, str, set, None] = None):
+    def __init__(self, token: str):
 
         super().__init__()
 
-        self._update_id: Union[int, None] = None
+        self._update_id: int = 0
         self._message: Union[m.TextMessage, m.CallbackMessage, m.PollMessage] = None
-        self._update: dict = None
+        self._update: dict = {}
         self._base_url: str = f"https://api.telegram.org/bot{token}/"
-        self.escape_chars = self._escape_chars_setup(escape_chars) if escape_chars else None
+        self.escape_chars_MarkdownV2 = self._escape_chars_setup(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'))
+        self.escape_chars_Markdown = self._escape_chars_setup(('_', '*', '`', '['))
 
-    def _escape_chars_setup(self, escape_chars: Union[list, str, set]):
-        if isinstance(escape_chars, (list, set)):
+    def _escape_chars_setup(self, escape_chars: Union[list, str, tuple]):
+        if isinstance(escape_chars, (list, tuple)):
 
             return {i: '\\' + chr(i) for i in bytes(''.join(escape_chars).encode('utf8'))}
         else:
@@ -115,7 +105,8 @@ class Bot(Keyboard):
 
     def send_mes(self, mess: m.SendMessage) -> None:
 
-        mess.text = self.escape_char(mess.text)
+        if mess and mess.parse_mode != 'HTML':
+            mess.text = self.escape_char(mess.text, mess.parse_mode)
         url: str = self._base_url + "sendMessage"
         params = mess.values()
         logger.debug(params)
@@ -126,7 +117,8 @@ class Bot(Keyboard):
 
     def edit_mes(self, mess: m.EditMessageText) -> None:
 
-        mess.text = self.escape_char(mess.text)
+        if mess and mess.parse_mode != 'HTML':
+            mess.text = self.escape_char(mess.text, mess.parse_mode)
         url: str = self._base_url + "editMessageText"
         params = mess.values()
         logger.debug(params)
@@ -154,12 +146,10 @@ class Bot(Keyboard):
 
         return response['result']['poll']['id'], response['result']['message_id']
 
-    def escape_char(self, text: str) -> str:
-
-        if self.escape_chars:
-
-            return text.translate(self.escape_chars)
-        return text
+    def escape_char(self, text: str, pars_mode: str) -> str:
+        if pars_mode == "MarkdownV2":
+            return text.translate(self.escape_chars_MarkdownV2)
+        return text.translate(self.escape_chars_Markdown)
 
     def __exit__(self, type, value, traceback):
         # Exception handling here
