@@ -10,6 +10,7 @@ from mybot.messages import SendMessage
 from news.dtp_ptz import DtpPtz
 from news.stolicaonego import StolicaOnego
 from news.yle import Yle
+from requests.exceptions import ConnectionError
 
 logger.remove()
 logger.add("logs/log_{time:YYYY-MM-DD}.log", rotation='1 week', compression='zip', diagnose=True, level=INFO)
@@ -41,6 +42,8 @@ def main():
                     else:
                         logger.info('Nothing new...')
         except KeyboardInterrupt:
+            pass
+        except ConnectionError:
             pass
         except NotImplementedError as e:
             print_exc(e)
