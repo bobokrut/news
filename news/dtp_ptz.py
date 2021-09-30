@@ -1,11 +1,6 @@
 from urllib.parse import urljoin
 
-import requests
-from lxml import html
 from .news import News
-from config import HEADERS
-
-from loguru import logger
 
 
 class DtpPtz(News):
@@ -21,16 +16,12 @@ class DtpPtz(News):
     def hashtag(self):
         return "#ptz"
 
-    def _get_xml(self, u):
-
-        dtp_ptz = requests.get(u, headers=HEADERS)
-        logger.info(f"Page {u} requested with code: {dtp_ptz.status_code}")
-        self._xml = html.fromstring(dtp_ptz.content)
-
     def _parse(self, u):
 
         new = {}
+
         for acc in reversed(self._xml.xpath("//li[contains(@id, 'acc-') and position() < 20]/h2[1]/a[1]")):
+
             url = acc.xpath("./@href")[0]
             text = acc.xpath("./text()")[0]
             id = int(url.split('/')[2])
@@ -45,6 +36,6 @@ class DtpPtz(News):
 
         for u in self._URLS:
 
-            self._get_xml(u)
+            self.get_xml(u)
 
             yield self._parse(u)
