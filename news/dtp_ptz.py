@@ -9,7 +9,7 @@ class DtpPtz(News):
         super().__init__(+3)
 
         self._URLS = ('https://dtpptz.ru/', )
-        self._last_id = 12484
+        self._last_id = 12635
         self._xml = None
 
     @property
