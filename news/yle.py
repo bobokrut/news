@@ -13,7 +13,7 @@ class Yle(News):
         super().__init__(+3)
 
         self.URL = {
-            "https://yle.fi/uutiset/osasto/news/": self.time
+            "https://yle.fi/uutiset/osasto/novosti/": self.time
         }
 
     @property
