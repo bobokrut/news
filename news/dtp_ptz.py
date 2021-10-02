@@ -10,17 +10,16 @@ class DtpPtz(News):
 
         self._URLS = ('https://dtpptz.ru/', )
         self._last_id = 12635
-        self._xml = None
 
     @property
     def hashtag(self):
         return "#ptz"
 
-    def _parse(self, u):
+    def _parse(self, xml, u):
 
         new = {}
 
-        for acc in reversed(self._xml.xpath("//li[contains(@id, 'acc-') and position() < 20]/h2[1]/a[1]")):
+        for acc in reversed(xml.xpath("//li[contains(@id, 'acc-') and position() < 20]/h2[1]/a[1]")):
 
             url = acc.xpath("./@href")[0]
             text = acc.xpath("./text()")[0]
@@ -34,8 +33,12 @@ class DtpPtz(News):
 
     def get_new(self):
 
+        new = {}
+
         for u in self._URLS:
 
-            self.get_xml(u)
+            xml = self.get_xml(u)
 
-            yield self._parse(u)
+            new.update(self._parse(xml, u))
+
+        return new

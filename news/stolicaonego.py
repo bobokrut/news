@@ -54,7 +54,8 @@ class StolicaOnego(News):
         return new
 
     def get_new(self):
-
+        new = {}
         for u in self._URLS:
             xml = self.get_xml(u)
-            yield self._parse(xml, u)
+            new.update(self._parse(xml, u))
+        return new

@@ -1,3 +1,4 @@
+
 import time as tm
 from urllib.parse import urljoin
 
@@ -21,10 +22,11 @@ class Yle(News):
         return "#finland"
 
     def get_new(self):
-
+        new = {}
         for u in self.URL:
-            xml = super().get_xml(u)
-            yield self._parse(xml, u)
+            xml = self.get_xml(u)
+            new.update(self._parse(xml, u))
+        return new
 
     def _check_time_date(self, date_time: str, url) -> bool:
 
