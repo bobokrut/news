@@ -18,7 +18,7 @@ class News(ABC):
 
         news = requests.get(url, headers=HEADERS)
         logger.info(f"Page {url} requested with code: {news.status_code}")
-        xml = html.fromstring(news.content)
+        xml = html.fromstring(news.text)
         return xml
 
     def filter_out(self, filter: list[str], text: str) -> bool:
