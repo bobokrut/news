@@ -1,4 +1,5 @@
 from threading import Event
+from typing import Tuple
 
 from loguru import logger
 from requests.exceptions import ConnectionError
@@ -15,7 +16,7 @@ logger.add("logs/log_{time:YYYY-MM-DD}.log", rotation='1 week', compression='zip
 
 exit = Event()
 
-sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
+sites: Tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
