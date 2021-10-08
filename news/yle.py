@@ -1,21 +1,20 @@
-
-import time as tm
 from urllib.parse import urljoin
 
 from loguru import logger
 from lxml.html import HtmlElement
 
-from news.news import News
+from news.news import NewsWithTime
 
 
-class Yle(News):
+class Yle(NewsWithTime):
 
     def __init__(self) -> None:
         super().__init__(+3)
 
-        self.URL = {
+        self.URLS = {
             "https://yle.fi/uutiset/osasto/novosti/": self.time
         }
+        self.time_format = '%Y-%m-%dT%H:%M:%S%z'
 
     @property
     def hashtag(self):
@@ -23,22 +22,12 @@ class Yle(News):
 
     def get_new(self):
         new = {}
-        for u in self.URL:
+        for u in self.URLS:
             xml = self.get_xml(u)
             new.update(self._parse(xml, u))
         return new
 
-    def _check_time_date(self, date_time: str, url) -> bool:
-
-        date_time_struct = tm.strptime(date_time, '%Y-%m-%dT%H:%M:%S%z')
-
-        if date_time_struct > self.URL[url]:
-            self.URL[url] = date_time_struct
-            return True
-
-        return False
-
-    def _parse(self, xml, url):
+    def _parse(self, xml: HtmlElement, url):
 
         new = {}
         elements: list[HtmlElement] = xml.xpath("/html/body/div[@id='container']/div[@id='oikea_palsta']/section/article[position() < 4]")
@@ -46,16 +35,17 @@ class Yle(News):
 
         for article in elements:
 
-            news_url: str = article.xpath("./h1/a[1]")[0].get('href')
-            text: str = article.xpath("./h1/a/text()")[0].replace("\n", '')
+            news_url: str = article.xpath("./h1/a[1]/@href")[0]
+            text: str = article.xpath("./h1/a/text()")[0][2:-2]  # cutting off \n at the begging and at the end
             time = article.xpath("./time/@datetime")[0]
 
             logger.debug(f"Time: {time}")
             logger.debug(f"Url: {news_url}")
             logger.debug(f"Text: {text[:10]}")
 
-            if self._check_time_date(time, url):
+            if time := self._check_time_date(time, self.time_format, self.URLS[url]):
 
+                self.URLS[url] = time
                 logger.debug("New article to the dict 'new' added!")
                 new[urljoin(url, news_url)] = text
 
