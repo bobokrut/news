@@ -36,7 +36,7 @@ class Yle(NewsWithTime):
         for article in elements:
 
             news_url: str = article.xpath("./h1/a[1]/@href")[0]
-            text: str = article.xpath("./h1/a/text()")[0][2:-2]  # cutting off \n at the begging and at the end
+            text: str = article.xpath("./h1/a/text()")[0][1:-1]  # cutting off \n at the begging and at the end
             time = article.xpath("./time/@datetime")[0]
 
             logger.debug(f"Time: {time}")
