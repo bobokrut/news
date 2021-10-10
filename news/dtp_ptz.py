@@ -1,7 +1,7 @@
 from urllib.parse import urljoin
 
-from lxml import html
 from loguru import logger
+from lxml import html
 
 from .news import News
 
@@ -13,10 +13,6 @@ class DtpPtz(News):
 
         self._URLS = ('https://dtpptz.ru/', )
         self._last_id = self._get_last_news_id()
-
-    @property
-    def hashtag(self):
-        return "#ptz"
 
     def get_new(self):
 
@@ -30,7 +26,13 @@ class DtpPtz(News):
 
         return new
 
-    def _get_last_news_id(self):
+    def _get_last_news_id(self) -> int:
+        """
+        Method used to dynamicly update last article id on startup. Is called once from ``__int__`` method
+
+        Returns:
+            [int]: last article id
+        """
 
         xml = self.get_xml(self._URLS[0])
         url: str = xml.xpath("//li[contains(@id, 'acc-') and position() = 2]/h2[1]/a[1]/@href")[0]
