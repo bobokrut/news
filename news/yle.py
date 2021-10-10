@@ -16,11 +16,7 @@ class Yle(NewsWithTime):
         }
         self.time_format = '%Y-%m-%dT%H:%M:%S%z'
 
-    @property
-    def hashtag(self):
-        return "#finland"
-
-    def get_new(self):
+    def get_new(self) -> dict[str, str]:
         new = {}
         for u in self.URLS:
             xml = self.get_xml(u)

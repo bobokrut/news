@@ -20,10 +20,6 @@ class StolicaOnego(NewsWithTime):
         self.FILTER: list[str] = ['коронавирус', 'пропал', 'пропавший', 'пропавшая']
         self.time_format = "%d.%m.%Y, %H:%M"
 
-    @property
-    def hashtag(self):
-        return "#ptz"
-
     def get_new(self):
         new = {}
         for u in self.URLS:
