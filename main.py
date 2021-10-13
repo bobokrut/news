@@ -1,18 +1,19 @@
+import logging
 from threading import Event
 from typing import Tuple
 
-from loguru import logger
 from requests.exceptions import ConnectionError
 
-from config import INFO, TOKEN
+from config import TOKEN, log_setup
 from mybot import Bot
 from mybot.messages import SendMessage
 from news.dtp_ptz import DtpPtz
 from news.stolicaonego import StolicaOnego
 from news.yle import Yle
 
-logger.remove()
-logger.add("logs/log_{time:YYYY-MM-DD}.log", rotation='1 week', compression='zip', diagnose=True, level=INFO)
+log_setup()
+
+logger = logging.getLogger("main")
 
 exit = Event()
 

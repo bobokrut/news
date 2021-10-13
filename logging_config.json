@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "formatters": {
+        "simple": {
+            "format": "[%(asctime)s] %(name)s:%(levelname)s - %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "validate": true
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "stream": "ext://sys.stdout"
+        },
+        "main_handler": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "level": "INFO",
+            "formatter": "simple",
+            "filename": "logs/main.log",
+            "backupCount": 5,
+            "when": "W6",
+            "encoding": "utf8"
+        },
+        "error_handler": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "level": "ERROR",
+            "formatter": "simple",
+            "filename": "logs/errors.log",
+            "backupCount": 5,
+            "when": "W6",
+            "encoding": "utf8"
+        },
+        "bot_handler": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "level": "INFO",
+            "formatter": "simple",
+            "filename": "logs/bot.log",
+            "backupCount": 5,
+            "when": "W6",
+            "encoding": "utf8"
+        },
+        "bot_error_handler": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "level": "ERROR",
+            "formatter": "simple",
+            "filename": "logs/bot_errors.log",
+            "backupCount": 5,
+            "when": "W6",
+            "encoding": "utf8"
+        }
+    },
+    "root": {
+        "level": "NOTSET",
+        "handlers": [
+            "console"
+        ],
+        "propogate": true
+    },
+    "loggers": {
+        "main": {
+            "handlers": [
+                "main_handler",
+                "error_handler"
+            ],
+            "propogate": false
+        },
+        "bot": {
+            "handlers": [
+                "bot_handler",
+                "bot_error_handler"
+            ],
+            "propogate": false
+        }
+    }
+}

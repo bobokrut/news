@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Iterator, Tuple, Union
 
 import requests
@@ -5,12 +6,7 @@ import requests
 from . import messages as m
 from .keyboard import Keyboard
 
-try:
-    from loguru import logger
-
-except ModuleNotFoundError:
-
-    raise ModuleNotFoundError
+logger = getLogger("bot")
 
 
 class BotException(Exception):

@@ -1,6 +1,5 @@
 from urllib.parse import urljoin
 
-from loguru import logger
 from lxml import html
 
 from .news import News
@@ -35,9 +34,9 @@ class DtpPtz(News):
         """
 
         xml = self.get_xml(self._URLS[0])
-        url: str = xml.xpath("//li[contains(@id, 'acc-') and position() = 2]/h2[1]/a[1]/@href")[0]
+        url: str = xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()=2]/h2/a/@href")[0]
         id = int(url.split('/')[-1])
-        logger.debug(f'{id=}')
+        self.logger.debug(f"{id=}")
 
         return id
 
@@ -45,7 +44,7 @@ class DtpPtz(News):
 
         new = {}
 
-        for acc in reversed(xml.xpath("//li[contains(@id, 'acc-') and position() < 20]/h2[1]/a[1]")):
+        for acc in reversed(xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()<=8]/h2/a")):
 
             url = acc.xpath("./@href")[0]
             text = acc.xpath("./text()")[0]

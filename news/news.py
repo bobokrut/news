@@ -1,17 +1,26 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
+from logging import getLogger as _getLogger
 from time import strptime, struct_time
 from typing import Union
 
 import requests
 from config import HEADERS
-from loguru import logger
 from lxml import html
 from lxml.html import HtmlElement
 
 
 class News(ABC):
-    """Base class for news parsing"""
+    """Base class for news parsing
+
+    Abstract methods:
+
+        - ``_parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]``
+        - ``get_new(self) -> dict[str, str]``
+    """
+
+    def __init__(self) -> None:
+        self.logger = _getLogger("main")
 
     @abstractmethod
     def get_new(self) -> dict[str, str]:
@@ -49,7 +58,7 @@ class News(ABC):
         """
 
         news = requests.get(url, headers=HEADERS)
-        logger.info(f"Page {url} requested with code: {news.status_code}")
+        self.logger.info(f"Page {url} requested with code: {news.status_code}")
         xml = html.fromstring(news.text)
 
         return xml
@@ -73,11 +82,13 @@ class NewsWithTime(News):
     """
     Extended News class which supports parsing articles with time stamp
 
-    Args:
-        News (class): base class
+    Abstract methods:
+
+        - ``_parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]``
+        - ``get_new(self) -> dict[str, str]``
     """
 
-    def __init__(self, td: int) -> None:
+    def __init__(self, td: int = +3) -> None:
         """
         Creates self.time with correct time_struct considering given timezone
 
@@ -86,7 +97,7 @@ class NewsWithTime(News):
         """
         super().__init__()
         self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple() if td else None
-        logger.info(f'Started time: {self.time}')
+        self.logger.info(f'Started time: {self.time}')
 
     def _check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
         """
