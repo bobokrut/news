@@ -63,7 +63,7 @@ class News(ABC):
 
         return xml
 
-    def filter_out(self, filter: list[str], text: str) -> bool:
+    def filter_out(self, filter: tuple[str, ...], text: str) -> bool:
         """
         Endicates if string conains any word from filter list
 
@@ -96,8 +96,8 @@ class NewsWithTime(News):
             td (int): timezone as `+3` or `-2`
         """
         super().__init__()
-        self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple() if td else None
-        self.logger.info(f'Started time: {self.time}')
+        self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple()
+        self.logger.info(f"Started time: {self.time}")
 
     def _check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
         """

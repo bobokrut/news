@@ -6,14 +6,11 @@ from news.news import NewsWithTime
 
 
 class Yle(NewsWithTime):
-
     def __init__(self) -> None:
         super().__init__(+3)
 
-        self.URLS = {
-            "https://yle.fi/uutiset/osasto/novosti/": self.time
-        }
-        self.time_format = '%Y-%m-%dT%H:%M:%S%z'
+        self.URLS = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
+        self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
     def get_new(self) -> dict[str, str]:
         new = {}

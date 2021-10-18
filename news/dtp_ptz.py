@@ -6,11 +6,10 @@ from .news import News
 
 
 class DtpPtz(News):
-
     def __init__(self) -> None:
         super().__init__()
 
-        self._URLS = ('https://dtpptz.ru/', )
+        self._URLS = ("https://dtpptz.ru/",)
         self._last_id = self._get_last_news_id()
 
     def get_new(self):
@@ -35,7 +34,7 @@ class DtpPtz(News):
 
         xml = self.get_xml(self._URLS[0])
         url: str = xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()=2]/h2/a/@href")[0]
-        id = int(url.split('/')[-1])
+        id = int(url.split("/")[-1])
         self.logger.debug(f"{id=}")
 
         return id
@@ -48,7 +47,7 @@ class DtpPtz(News):
 
             url = acc.xpath("./@href")[0]
             text = acc.xpath("./text()")[0]
-            id = int(url.split('/')[2])
+            id = int(url.split("/")[2])
 
             if id > self._last_id:
                 new[urljoin(u, url)] = text

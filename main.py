@@ -26,17 +26,17 @@ def main():
             news = [n for n in map(lambda x: x.get_new(), sites) if n]
             if news:
                 for site in news:
-                    logger.info(f'Found {len(site)} articles')
+                    logger.info(f"Found {len(site)} articles")
                     logger.debug(site)
                     for url, text in site.items():
                         with Bot(TOKEN) as bot:
                             bot.send_mes(
                                 SendMessage(
-                                    text=f'{text}\n{url}',
+                                    text=f"{text}\n{url}",
                                     chat_id=387387555,
                                     disable_notification=True,
                                     disable_web_page_preview=True,
-                                    parse_mode='MarkdownV2'
+                                    parse_mode="MarkdownV2",
                                 )
                             )
             else:
@@ -56,10 +56,11 @@ def quit(signo, _frame):
     exit.set()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import signal
-    for sig in ('TERM', 'HUP', 'INT'):
-        signal.signal(getattr(signal, 'SIG' + sig), quit)
+
+    for sig in ("TERM", "HUP", "INT"):
+        signal.signal(getattr(signal, "SIG" + sig), quit)
 
     main()
