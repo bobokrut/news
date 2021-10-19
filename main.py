@@ -1,6 +1,5 @@
 import logging
 from threading import Event
-from typing import Tuple
 
 from requests.exceptions import ConnectionError
 
@@ -17,7 +16,7 @@ logger = logging.getLogger("main")
 
 exit = Event()
 
-sites: Tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
+sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
