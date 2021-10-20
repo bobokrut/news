@@ -7,7 +7,7 @@ from news.news import NewsWithTime
 
 class Yle(NewsWithTime):
     def __init__(self) -> None:
-        super().__init__(+3)
+        super().__init__()
 
         self.URLS = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"

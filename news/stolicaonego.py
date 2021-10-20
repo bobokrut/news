@@ -7,7 +7,7 @@ from news.news import NewsWithTime
 
 class StolicaOnego(NewsWithTime):
     def __init__(self) -> None:
-        super().__init__(+3)
+        super().__init__()
 
         self.URLS = {
             "https://stolicaonego.ru/news/society/": self.time,
@@ -16,7 +16,7 @@ class StolicaOnego(NewsWithTime):
             "https://stolicaonego.ru/news/personal/": self.time,
         }
 
-        self.FILTER: tuple[str,...] = ( "коронавирус", "пропал", "пропавший", "пропавшая" )
+        self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
 
     def get_new(self):
