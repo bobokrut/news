@@ -56,7 +56,7 @@
         "handlers": [
             "console"
         ],
-        "propogate": true
+        "propogate": false
     },
     "loggers": {
         "main": {
@@ -64,14 +64,14 @@
                 "main_handler",
                 "error_handler"
             ],
-            "propogate": false
+            "propogate": true
         },
         "bot": {
             "handlers": [
                 "bot_handler",
                 "bot_error_handler"
             ],
-            "propogate": false
+            "propogate": true
         }
     }
 }
