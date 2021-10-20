@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
 from time import strptime, struct_time
-from typing import Union
+from typing import Optional, Union
 
 import requests
 from config import HEADERS
@@ -47,7 +47,7 @@ class News(ABC):
         """
         pass
 
-    def get_xml(self, url: str) -> html.HtmlElement:
+    def get_xml(self, url: str) -> Optional[html.HtmlElement]:
         """
         Makes request to the website, gets html string and converts it to the parsible object.
 
@@ -59,10 +59,12 @@ class News(ABC):
         """
 
         news = requests.get(url, headers=HEADERS)
-        self.logger.info(f"Page {url} requested with code: {news.status_code}")
-        xml = html.fromstring(news.text)
+        if news.ok:
+            return html.fromstring(news.text)
 
-        return xml
+        else:
+            self.logger.warning(f"Page {url} requested with code: {news.status_code}")
+            return None
 
     def filter_out(self, filter: tuple[str, ...], text: str) -> bool:
         """

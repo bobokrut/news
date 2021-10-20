@@ -19,9 +19,9 @@ class DtpPtz(News):
 
         for u in self._URLS:
 
-            xml = self.get_xml(u)
+            if xml := self.get_xml(u):
 
-            new.update(self._parse(xml, u))
+                new.update(self._parse(xml, u))
 
         return new
 
