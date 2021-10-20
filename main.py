@@ -21,7 +21,6 @@ sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
-    logger.error("Test")
     while not exit.is_set():
         try:
             for site in sites:

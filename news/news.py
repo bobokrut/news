@@ -87,7 +87,7 @@ class News(ABC):
 
             result = fn(*args, **kwargs)
             if result:
-                args[0].logger.info(f"Found {len(result)} articles on {args[0].__class__.__name__}")
+                args[0].logger.info(f"Found {len(result)} article(s) on {args[0].__class__.__name__}")
             else:
                 args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
             return result
