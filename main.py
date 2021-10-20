@@ -3,9 +3,10 @@ from threading import Event
 
 from requests.exceptions import ConnectionError
 
-from config import TOKEN, log_setup
+from config import TOKEN
 from mybot import Bot
 from mybot.messages import SendMessage
+from mylogs import log_setup
 from news.dtp_ptz import DtpPtz
 from news.stolicaonego import StolicaOnego
 from news.yle import Yle
@@ -20,6 +21,7 @@ sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
+    logger.error("Test")
     while not exit.is_set():
         try:
             for site in sites:

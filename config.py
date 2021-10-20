@@ -1,16 +1,5 @@
-import logging.config
-from json import load
-
 HEADERS = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}
 
 TOKEN = "887619980:AAEMxrtWPsA6uFErgLdxOt-Drgey8-7JCXU"
 
 DEBUG = False
-
-
-def log_setup():
-    with open("./logging_config.json", "r") as f:
-        config = load(f)
-        if not DEBUG:
-            config["root"]["handlers"] = []
-        logging.config.dictConfig(config)
