@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 from logging import getLogger as _getLogger
 from time import strptime, struct_time
 from typing import Union
@@ -76,6 +77,20 @@ class News(ABC):
         """
 
         return any(word in text for word in filter)
+
+    @staticmethod
+    def log_articles(fn):
+        @wraps(fn)
+        def wrapped(*args, **kwargs):
+
+            result = fn(*args, **kwargs)
+            if result:
+                args[0].logger.info(f"Found {len(result)} articles on {args[0].__class__.__name__}")
+            else:
+                args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
+            return result
+
+        return wrapped
 
 
 class NewsWithTime(News):

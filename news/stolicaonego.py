@@ -19,6 +19,7 @@ class StolicaOnego(NewsWithTime):
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
 
+    @NewsWithTime.log_articles
     def get_new(self):
         new = {}
         for u in self.URLS:

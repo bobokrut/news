@@ -12,6 +12,7 @@ class Yle(NewsWithTime):
         self.URLS = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
+    @NewsWithTime.log_articles
     def get_new(self) -> dict[str, str]:
         new = {}
         for u in self.URLS:

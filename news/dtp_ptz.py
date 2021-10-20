@@ -12,6 +12,7 @@ class DtpPtz(News):
         self._URLS = ("https://dtpptz.ru/",)
         self._last_id = self._get_last_news_id()
 
+    @News.log_articles
     def get_new(self):
 
         new = {}
