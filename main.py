@@ -7,9 +7,7 @@ from config import TOKEN
 from mybot import Bot
 from mybot.messages import SendMessage
 from mylogs import log_setup
-from news.dtp_ptz import DtpPtz
-from news.stolicaonego import StolicaOnego
-from news.yle import Yle
+from news import DtpPtz, News, StolicaOnego, Yle
 
 log_setup()
 
@@ -17,7 +15,7 @@ logger = logging.getLogger("main")
 
 exit = Event()
 
-sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
+sites: tuple[News, ...] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
