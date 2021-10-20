@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
-from time import strptime, struct_time
+from time import strftime, strptime, struct_time
 from typing import Optional, Union
 
 import requests
@@ -114,7 +114,7 @@ class NewsWithTime(News):
         """
         super().__init__()
         self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple()
-        self.logger.info(f"Started time: {self.time}")
+        self.logger.info(f"{self.__class__.__name__} started time: {strftime('%Y-%m-%dT%H:%M:%SZ', self.time)}")
 
     def _check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
         """
