@@ -23,7 +23,8 @@ class StolicaOnego(NewsWithTime):
     def get_new(self):
         new = {}
         for u in self.URLS:
-            if xml := self.get_xml(u):
+            xml: HtmlElement = self.get_xml(u)
+            if xml is not None:
                 new.update(self._parse(xml, u))
 
         return new

@@ -18,8 +18,8 @@ class DtpPtz(News):
         new = {}
 
         for u in self._URLS:
-
-            if xml := self.get_xml(u):
+            xml: html.HtmlElement = self.get_xml(u)
+            if xml is not None:
 
                 new.update(self._parse(xml, u))
 

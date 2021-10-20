@@ -16,7 +16,8 @@ class Yle(NewsWithTime):
     def get_new(self) -> dict[str, str]:
         new = {}
         for u in self.URLS:
-            if xml := self.get_new(u):
+            xml: HtmlElement = self.get_xml(u)
+            if xml is not None:
                 new.update(self._parse(xml, u))
         return new
 
