@@ -22,24 +22,10 @@ sites: tuple[StolicaOnego, Yle, DtpPtz] = (StolicaOnego(), Yle(), DtpPtz())
 def main():
     while not exit.is_set():
         try:
-            news = [n for n in map(lambda x: x.get_new(), sites) if n]
-            if news:
-                for site in news:
-                    logger.info(f"Found {len(site)} articles")
-                    logger.debug(site)
-                    for url, text in site.items():
-                        with Bot(TOKEN) as bot:
-                            bot.send_mes(
-                                SendMessage(
-                                    text=f"{text}\n{url}",
-                                    chat_id=387387555,
-                                    disable_notification=True,
-                                    disable_web_page_preview=True,
-                                    parse_mode="MarkdownV2",
-                                )
-                            )
-            else:
-                logger.info("Nothing new...")
+            for site in sites:
+                for url, text in site.get_new().items():
+                    with Bot(TOKEN) as bot:
+                        bot.send_mes(SendMessage(text=f"{text}\n{url}", chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
         except (KeyboardInterrupt, ConnectionError):
             pass
         except Exception as e:
