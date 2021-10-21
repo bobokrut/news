@@ -5,7 +5,7 @@ import sys as _sys
 
 from .news import News as _News
 
-_modules = [file.split(".")[0] for file in _os.listdir("news") if "." in file and file.split(".")[1] == "py" and file != "__init__.py"]
+_modules = (file.split(".")[0] for file in _os.listdir("news") if not file.startswith("__"))
 
 for module in _modules:
     _importlib.import_module(f"news.{module}")
