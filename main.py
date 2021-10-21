@@ -3,19 +3,15 @@ from threading import Event
 
 from requests.exceptions import ConnectionError
 
+import mylogs
 from config import TOKEN
 from mybot import Bot
 from mybot.messages import SendMessage
-from mylogs import log_setup
-from news import DtpPtz, News, StolicaOnego, Yle
-
-log_setup()
+from news import sites
 
 logger = logging.getLogger("main")
 
 exit = Event()
-
-sites: tuple[News, ...] = (StolicaOnego(), Yle(), DtpPtz())
 
 
 def main():
