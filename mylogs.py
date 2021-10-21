@@ -21,3 +21,6 @@ def log_setup():
     for handler in main_logger.handlers:
         if handler.level == INFO:
             handler.addFilter(InfoFilter())
+
+
+log_setup()
