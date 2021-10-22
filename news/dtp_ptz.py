@@ -9,7 +9,7 @@ class DtpPtz(News):
     def __init__(self) -> None:
         super().__init__()
 
-        self._URLS = ("https://dtpptz.ru/",)
+        self.URLS = ("https://dtpptz.ru/",)
         self._last_id = self._get_last_news_id()
 
     @News.log_articles
@@ -17,7 +17,7 @@ class DtpPtz(News):
 
         new = {}
 
-        for u in self._URLS:
+        for u in self.URLS:
             xml: html.HtmlElement = self.get_xml(u)
             if xml is not None:
 
@@ -33,7 +33,7 @@ class DtpPtz(News):
             [int]: last article id
         """
 
-        xml = self.get_xml(self._URLS[0])
+        xml = self.get_xml(self.URLS[0])
         url: str = xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()=2]/h2/a/@href")[0]
         id = int(url.split("/")[-1])
         self.logger.debug(f"{id=}")
