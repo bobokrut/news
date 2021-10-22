@@ -15,6 +15,7 @@ exit = Event()
 
 
 def main():
+    logger.info("START....")
     while not exit.is_set():
         try:
             for site in sites:
