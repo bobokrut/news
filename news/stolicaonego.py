@@ -11,7 +11,7 @@ class StolicaOnego(NewsWithTime):
 
         self.URLS = {
             "https://stolicaonego.ru/news/society/": self.time,
-            "https://stolicaonego.ru/news/crime/": self.time,
+            #  "https://stolicaonego.ru/news/crime/": self.time,
             "https://stolicaonego.ru/news/incident/": self.time,
             "https://stolicaonego.ru/news/personal/": self.time,
         }
