@@ -35,10 +35,13 @@ class StolicaOnego(NewsWithTime):
         elements: list[HtmlElement] = xml.xpath("/html/body/div[5]/div/div[1]/div[2]/div/div[position() < 7]/div[2]")
 
         for article in reversed(elements):
+            try:
 
-            news_url = article.xpath("./div[1]/a[1]/@href")[0]
-            text = article.xpath("./div[1]/a[1]/text()")[0]
-            time = article.xpath("./div[3]/text()")[0]
+                news_url = article.xpath("./div[1]/a[1]/@href")[0]
+                text = article.xpath("./div[1]/a[1]/text()")[0]
+                time = article.xpath("./div[3]/text()")[0]
+            except Exception:
+                pass
 
             if self.filter_out(filter=self.FILTER, text=text):
                 self.logger.info(f"Filtered: {url}")
