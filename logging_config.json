@@ -30,7 +30,7 @@
         },
         "error_handler": {
             "class": "logging.handlers.TimedRotatingFileHandler",
-            "level": "ERROR",
+            "level": "WARNING",
             "formatter": "full",
             "filename": "logs/errors.log",
             "backupCount": 5,
