@@ -32,15 +32,16 @@ class StolicaOnego(NewsWithTime):
     def _parse(self, xml: HtmlElement, url):
 
         new = {}
-        elements: list[HtmlElement] = xml.xpath("//div[@class='content_news' and position() < 6]/div[@class='content_news_list_text']")
+        elements: list[HtmlElement] = xml.xpath("/html/body/div[5]/div/div[1]/div[2]/div/div[position() < 7]/div[2]")
 
         for article in reversed(elements):
 
-            news_url = article.xpath("./div[@class='content_news_list_text_title']/a[1]/@href")[0]
-            text = article.xpath("./div[@class='content_news_list_text_title']/a[1]/text()")[0]
-            time = article.xpath("./div[@class='content_news_list_text_date']/text()")[0]
+            news_url = article.xpath("./div[1]/a[1]/@href")[0]
+            text = article.xpath("./div[1]/a[1]/text()")[0]
+            time = article.xpath("./div[3]/text()")[0]
 
             if self.filter_out(filter=self.FILTER, text=text):
+                self.logger.info(f"Filtered: {url}")
                 continue
 
             if time := self._check_time_date(time, self.time_format, self.URLS[url]):
