@@ -1,11 +1,12 @@
 import importlib as _importlib
 import inspect as _inspect
 import os as _os
+import re
 import sys as _sys
 
 from .news import News as _News
 
-_modules = (file.split(".")[0] for file in _os.listdir("news") if not file.startswith("__"))
+_modules = (file[:-3] for file in _os.listdir("news") if re.fullmatch("[a-z]+.py", file))
 
 for module in _modules:
     _importlib.import_module(f"news.{module}")
