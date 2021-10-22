@@ -4,6 +4,7 @@ services:
         container_name: ptz_news
         volumes:
             - "/home/pi/news/logs:/usr/src/app/logs"
+            - "/etc/localtime:/etc/localtime:ro"
         build: .
         restart: unless-stopped
         platform: linux/arm/v7
