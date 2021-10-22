@@ -41,7 +41,7 @@ class StolicaOnego(NewsWithTime):
                 text = article.xpath("./div[1]/a[1]/text()")[0]
                 time = article.xpath("./div[3]/text()")[0]
             except Exception:
-                pass
+                continue
 
             if self.filter_out(filter=self.FILTER, text=text):
                 self.logger.info(f"Filtered: {url}")
