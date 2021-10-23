@@ -12,19 +12,6 @@ class DtpPtz(News):
         self.URLS = ("https://dtpptz.ru/",)
         self._last_id = self._get_last_news_id()
 
-    @News.log_articles
-    def get_new(self):
-
-        new = {}
-
-        for u in self.URLS:
-            xml: html.HtmlElement = self.get_xml(u)
-            if xml is not None:
-
-                new.update(self._parse(xml, u))
-
-        return new
-
     def _get_last_news_id(self) -> int:
         """
         Method used to dynamicly update last article id on startup. Is called once from ``__int__`` method

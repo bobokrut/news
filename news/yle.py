@@ -12,15 +12,6 @@ class Yle(NewsWithTime):
         self.URLS = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
-    @NewsWithTime.log_articles
-    def get_new(self) -> dict[str, str]:
-        new = {}
-        for u in self.URLS:
-            xml: HtmlElement = self.get_xml(u)
-            if xml is not None:
-                new.update(self._parse(xml, u))
-        return new
-
     def _parse(self, xml: HtmlElement, url):
 
         new = {}

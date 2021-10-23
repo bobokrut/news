@@ -3,12 +3,26 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
 import requests
 from config import HEADERS
 from lxml import html
 from lxml.html import HtmlElement
+
+
+def _log_articles(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+
+        result = fn(*args, **kwargs)
+        if result:
+            args[0].logger.info(f"Found {len(result)} article(s) on {args[0].__class__.__name__}")
+        else:
+            args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
+        return result
+
+    return wrapped
 
 
 class News(ABC):
@@ -17,21 +31,14 @@ class News(ABC):
     Abstract methods:
 
         - ``_parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]``
-        - ``get_new(self) -> dict[str, str]``
+
+    Abstract variables:
+        - ``self.URLS: Iterable[]``
     """
 
     def __init__(self) -> None:
         self.logger = _getLogger("main")
-
-    @abstractmethod
-    def get_new(self) -> dict[str, str]:
-        """
-        Entry method for this class which looks for new news and returns them.
-
-        Returns:
-            dict[str, str]: returns dict {url: text} with all new founded news or is empty if nothing was found
-        """
-        pass
+        self.URLS = ...
 
     @abstractmethod
     def _parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]:
@@ -46,6 +53,22 @@ class News(ABC):
             dict[str, str]: returns dict {url: text} with all new founded news or is empty if nothing was found
         """
         pass
+
+    @_log_articles
+    def get_new(self) -> dict[str, str]:
+        """
+        Entry method for this class which looks for new news and returns them.
+
+        Returns:
+            dict[str, str]: returns dict {url: text} with all new founded news or is empty if nothing was found
+        """
+        new = {}
+        for u in self.URLS:  # type: ignore
+            xml: HtmlElement = self.get_xml(u)
+            if xml is not None:
+                new.update(self._parse(xml, u))
+
+        return new
 
     def get_xml(self, url: str) -> Optional[html.HtmlElement]:
         """
@@ -82,20 +105,6 @@ class News(ABC):
             self.logger.info(f"Filtered: {text}")
         return any(word in text for word in filter)
 
-    @staticmethod
-    def log_articles(fn):
-        @wraps(fn)
-        def wrapped(*args, **kwargs):
-
-            result = fn(*args, **kwargs)
-            if result:
-                args[0].logger.info(f"Found {len(result)} article(s) on {args[0].__class__.__name__}")
-            else:
-                args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
-            return result
-
-        return wrapped
-
 
 class NewsWithTime(News):
     """
@@ -104,7 +113,11 @@ class NewsWithTime(News):
     Abstract methods:
 
         - ``_parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]``
-        - ``get_new(self) -> dict[str, str]``
+
+    Abstract variables:
+        - ``self.URLS: dict[str, time.struct_time]`` = {'http://...', `self.time`}
+
+            `self.time` is from NewsWithTime.__init__()
     """
 
     def __init__(self, td: int = +3) -> None:
