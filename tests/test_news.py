@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from lxml.html import HtmlElement
 from mylogs import log_setup
-from news import stolicaonego, yle
+from news import mysites
 from news.news import News
 from requests.exceptions import ConnectionError
 from requests_mock.mocker import Mocker
@@ -22,12 +22,12 @@ def news_class():
 @pytest.fixture
 def stolica_onego_class():
 
-    return stolicaonego.StolicaOnego()
+    return mysites.StolicaOnego()
 
 
 @pytest.fixture
 def yle_class():
-    return yle.Yle()
+    return mysites.Yle()
 
 
 def test_news_filtering(news_class: News, caplog: pytest.LogCaptureFixture):
@@ -44,7 +44,7 @@ def test_news_filtering(news_class: News, caplog: pytest.LogCaptureFixture):
             assert caplog.records[-1].message == f"Filtered: {t}"
 
 
-def test_stolica_onego_start_time(stolica_onego_class: stolicaonego.StolicaOnego):
+def test_stolica_onego_start_time(stolica_onego_class: mysites.StolicaOnego):
 
     excpected = time.localtime().tm_hour
 
@@ -53,7 +53,7 @@ def test_stolica_onego_start_time(stolica_onego_class: stolicaonego.StolicaOnego
     assert excpected == actual
 
 
-def test_yle_start_time(yle_class: yle.Yle):
+def test_yle_start_time(yle_class: mysites.Yle):
 
     excpected = time.localtime().tm_hour
 

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
-from typing import Iterable, Optional, Union
+from typing import Collection, Optional, Sequence, Union
 
 import requests
 from config import HEADERS
@@ -38,7 +38,7 @@ class News(ABC):
 
     def __init__(self) -> None:
         self.logger = _getLogger("main")
-        self.URLS = ...
+        self.URLS: Union[Sequence, dict[str, struct_time]] = ...  # type: ignore
 
     @abstractmethod
     def _parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]:
@@ -63,7 +63,7 @@ class News(ABC):
             dict[str, str]: returns dict {url: text} with all new founded news or is empty if nothing was found
         """
         new = {}
-        for u in self.URLS:  # type: ignore
+        for u in self.URLS:
             xml: HtmlElement = self.get_xml(u)
             if xml is not None:
                 new.update(self._parse(xml, u))
