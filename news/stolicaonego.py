@@ -19,16 +19,6 @@ class StolicaOnego(NewsWithTime):
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
 
-    @NewsWithTime.log_articles
-    def get_new(self):
-        new = {}
-        for u in self.URLS:
-            xml: HtmlElement = self.get_xml(u)
-            if xml is not None:
-                new.update(self._parse(xml, u))
-
-        return new
-
     def _parse(self, xml: HtmlElement, url):
 
         new = {}
