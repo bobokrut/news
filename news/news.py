@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
-from typing import Collection, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 import requests
 from config import HEADERS
