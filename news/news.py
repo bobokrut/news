@@ -77,7 +77,9 @@ class News(ABC):
         Returns:
             bool: True if any word was found in the text else False
         """
-
+        result = any(word in text for word in filter)
+        if result:
+            self.logger.info(f"Filtered: {text}")
         return any(word in text for word in filter)
 
     @staticmethod

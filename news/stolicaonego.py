@@ -44,7 +44,6 @@ class StolicaOnego(NewsWithTime):
                 continue
 
             if self.filter_out(filter=self.FILTER, text=text):
-                self.logger.info(f"Filtered: {url}")
                 continue
 
             if time := self._check_time_date(time, self.time_format, self.URLS[url]):
