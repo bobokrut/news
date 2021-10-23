@@ -16,6 +16,8 @@ neovim = "^0.3.1"
 black = "^21.9b0"
 types-requests = "^2.25.11"
 snakeviz = "^2.1.0"
+pytest = "^6.2.5"
+requests-mock = "^1.9.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
