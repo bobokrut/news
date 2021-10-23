@@ -1,3 +1,4 @@
+from time import struct_time
 from urllib.parse import urljoin
 
 from lxml.html import HtmlElement
@@ -9,7 +10,7 @@ class DtpPtz(News):
     def __init__(self) -> None:
         super().__init__()
 
-        self.URLS = ("https://dtpptz.ru/",)
+        self.URLS: tuple[str, ...] = ("https://dtpptz.ru/",)
         self._last_id = self._get_last_news_id()
 
     def _get_last_news_id(self) -> int:
@@ -48,7 +49,7 @@ class StolicaOnego(NewsWithTime):
     def __init__(self) -> None:
         super().__init__()
 
-        self.URLS = {
+        self.URLS: dict[str, struct_time] = {
             "https://stolicaonego.ru/news/society/": self.time,
             #  "https://stolicaonego.ru/news/crime/": self.time,
             "https://stolicaonego.ru/news/incident/": self.time,
@@ -86,7 +87,7 @@ class Yle(NewsWithTime):
     def __init__(self) -> None:
         super().__init__()
 
-        self.URLS = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
+        self.URLS: dict[str, struct_time] = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
     def _parse(self, xml: HtmlElement, url):
