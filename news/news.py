@@ -125,7 +125,7 @@ class NewsWithTime(News):
         Creates self.time with correct time_struct considering given timezone
 
         Args:
-            td (int): timezone as `+3` or `-2`
+            td (int): timezone as `+3` or `-2` (default: +3)
         """
         super().__init__()
         self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple()
