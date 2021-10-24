@@ -2,6 +2,7 @@ import time
 from logging import INFO
 from unittest.mock import patch
 
+import config
 import pytest
 from lxml.html import HtmlElement
 from mylogs import log_setup
@@ -10,6 +11,7 @@ from news.news import News
 from requests.exceptions import ConnectionError
 from requests_mock.mocker import Mocker
 
+config.DEBUG = True
 log_setup()
 
 
