@@ -82,7 +82,7 @@ class News(ABC):
         """
 
         news = requests.get(url, headers=HEADERS)
-        if news.ok:
+        if news.status_code == 200:
             return html.fromstring(news.text)
 
         else:
