@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
-from typing import Optional, Union
+from typing import Generator, Optional, Union
 
 import requests
 from config import HEADERS
@@ -15,9 +15,9 @@ def _log_articles(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):
 
-        result = fn(*args, **kwargs)
+        result: Generator[tuple[str, None, None]] = fn(*args, **kwargs)
         if result:
-            args[0].logger.info(f"Found {len(result)} article(s) on {args[0].__class__.__name__}")
+            args[0].logger.info(f"Found some article(s) on {args[0].__class__.__name__}")
         else:
             args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
         return result
@@ -40,7 +40,8 @@ class News(ABC):
         self.logger = _getLogger("main")
 
     @abstractmethod
-    def _parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]:
+    def parse(self, xml: HtmlElement, ulr: str) -> Generator[tuple[str, str], None, None]:
+
         """
         Method which should contain parse logic.
 
@@ -53,21 +54,18 @@ class News(ABC):
         """
         pass
 
-    @_log_articles
-    def get_new(self) -> dict[str, str]:
+    # @_log_articles
+    def get_new(self) -> Generator[tuple[str, str], None, None]:
         """
         Entry method for this class which looks for new news and returns them.
 
         Returns:
             dict[str, str]: returns dict {url: text} with all new founded news or is empty if nothing was found
         """
-        new = {}
         for u in self.URLS:  # type: ignore
             xml: HtmlElement = self.get_xml(u)
             if xml is not None:
-                new.update(self._parse(xml, u))
-
-        return new
+                yield from self.parse(xml, u)
 
     def get_xml(self, url: str) -> Optional[html.HtmlElement]:
         """
@@ -106,13 +104,17 @@ class News(ABC):
 
 
 class NewsWithId(News):
-    def __init__(self, urls: tuple[str, ...]) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.URLS = urls
-        self.last_id: int = self._get_last_news_id()
 
     @abstractmethod
-    def _get_last_news_id(self) -> int:
+    def get_last_news_id(self) -> int:
+        """
+        Method used to dynamicly update last article id on startup. Is called once from ``__int__`` method
+
+        Returns:
+            [int]: last article id
+        """
         pass
 
 
@@ -130,7 +132,7 @@ class NewsWithTime(News):
             `self.time` is from NewsWithTime.__init__()
     """
 
-    def __init__(self, urls: tuple[str, ...], tz: int = +3) -> None:
+    def __init__(self) -> None:
         """
         Creates self.time with correct time_struct considering given timezone
 
@@ -138,20 +140,19 @@ class NewsWithTime(News):
             td (int): timezone as `+3` or `-2` (default: +3)
         """
         super().__init__()
-        self.URLS = self._construct_dict_urls(urls, tz)
 
-    def _construct_dict_urls(self, urls: tuple[str, ...], tz: int):
+    def construct_dict_urls(self, urls: tuple[str, ...], tz: int = +3):
 
-        return {url: self._get_time(tz) for url in urls}
+        return {url: self.get_time(tz) for url in urls}
 
-    def _get_time(self, tz: int) -> struct_time:
+    def get_time(self, tz: int) -> struct_time:
 
         time = (datetime.now(timezone(timedelta(hours=tz)))).timetuple()
         self.logger.debug(f"{self.__class__.__name__} started time: {strftime('%Y-%m-%dT%H:%M:%SZ', time)}")
 
         return time
 
-    def _check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
+    def check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
         """
         Checks if given datetime of article is bigger than previous one. If yes returns new `struct_time` else `None`
 

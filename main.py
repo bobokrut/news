@@ -19,7 +19,7 @@ def main():
     while not exit.is_set():
         try:
             for site in sites:
-                for url, text in site.get_new().items():
+                for url, text in site.get_new():
                     with Bot(TOKEN) as bot:
                         bot.send_mes(SendMessage(text=f"{text}\n{url}", chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
         except (KeyboardInterrupt, ConnectionError):
