@@ -1,17 +1,15 @@
-from time import struct_time
 from urllib.parse import urljoin
 
 from lxml.html import HtmlElement
 
-from .news import News, NewsWithTime
+from .news import NewsWithId, NewsWithTime
 
 
-class DtpPtz(News):
+class DtpPtz(NewsWithId):
     def __init__(self) -> None:
-        super().__init__()
 
-        self.URLS: tuple[str, ...] = ("https://dtpptz.ru/",)
-        self._last_id = self._get_last_news_id()
+        urls: tuple[str, ...] = ("https://dtpptz.ru/",)
+        super().__init__(urls=urls)
 
     def _get_last_news_id(self) -> int:
         """
@@ -38,7 +36,7 @@ class DtpPtz(News):
             text = acc.xpath("./text()")[0]
             id = int(url.split("/")[2])
 
-            if id > self._last_id:
+            if id > self.last_id:
                 new[urljoin(u, url)] = text
                 self._last_id = id
 
@@ -47,14 +45,13 @@ class DtpPtz(News):
 
 class StolicaOnego(NewsWithTime):
     def __init__(self) -> None:
-        super().__init__()
-
-        self.URLS: dict[str, struct_time] = {
-            "https://stolicaonego.ru/news/society/": self.time,
-            #  "https://stolicaonego.ru/news/crime/": self.time,
-            "https://stolicaonego.ru/news/incident/": self.time,
-            "https://stolicaonego.ru/news/personal/": self.time,
-        }
+        urls = (
+            "https://stolicaonego.ru/news/society/",
+            #  "https://stolicaonego.ru/news/crime/",
+            "https://stolicaonego.ru/news/incident/",
+            "https://stolicaonego.ru/news/personal/",
+        )
+        super().__init__(urls=urls)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
@@ -85,9 +82,10 @@ class StolicaOnego(NewsWithTime):
 
 class Yle(NewsWithTime):
     def __init__(self) -> None:
-        super().__init__()
 
-        self.URLS: dict[str, struct_time] = {"https://yle.fi/uutiset/osasto/novosti/": self.time}
+        urls = ("https://yle.fi/uutiset/osasto/novosti/",)
+        super().__init__(urls=urls)
+
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
     def _parse(self, xml: HtmlElement, url):

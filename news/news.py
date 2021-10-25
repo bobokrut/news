@@ -38,7 +38,6 @@ class News(ABC):
 
     def __init__(self) -> None:
         self.logger = _getLogger("main")
-        self.URLS = ...
 
     @abstractmethod
     def _parse(self, xml: HtmlElement, ulr: str) -> dict[str, str]:
@@ -106,6 +105,17 @@ class News(ABC):
         return any(word in text for word in filter)
 
 
+class NewsWithId(News):
+    def __init__(self, urls: tuple[str, ...]) -> None:
+        super().__init__()
+        self.URLS = urls
+        self.last_id: int = self._get_last_news_id()
+
+    @abstractmethod
+    def _get_last_news_id(self) -> int:
+        pass
+
+
 class NewsWithTime(News):
     """
     Extended News class which supports parsing articles with time stamp
@@ -120,7 +130,7 @@ class NewsWithTime(News):
             `self.time` is from NewsWithTime.__init__()
     """
 
-    def __init__(self, td: int = +3) -> None:
+    def __init__(self, urls: tuple[str, ...], tz: int = +3) -> None:
         """
         Creates self.time with correct time_struct considering given timezone
 
@@ -128,8 +138,18 @@ class NewsWithTime(News):
             td (int): timezone as `+3` or `-2` (default: +3)
         """
         super().__init__()
-        self.time = (datetime.now(timezone(timedelta(hours=td)))).timetuple()
-        self.logger.debug(f"{self.__class__.__name__} started time: {strftime('%Y-%m-%dT%H:%M:%SZ', self.time)}")
+        self.URLS = self._construct_dict_urls(urls, tz)
+
+    def _construct_dict_urls(self, urls: tuple[str, ...], tz: int):
+
+        return {url: self._get_time(tz) for url in urls}
+
+    def _get_time(self, tz: int) -> struct_time:
+
+        time = (datetime.now(timezone(timedelta(hours=tz)))).timetuple()
+        self.logger.debug(f"{self.__class__.__name__} started time: {strftime('%Y-%m-%dT%H:%M:%SZ', time)}")
+
+        return time
 
     def _check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
         """
