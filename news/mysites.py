@@ -30,7 +30,7 @@ class DtpPtz(NewsWithId):
             id = int(url.split("/")[2])
 
             if id > self.last_id:
-                self._last_id = id
+                self.last_id = id
                 yield (urljoin(u, url), text)
 
 
