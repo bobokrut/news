@@ -41,7 +41,7 @@ class StolicaOnego(NewsWithTime):
     def __init__(self, urls: tuple) -> None:
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls, tz=0)
+        self.URLS = self.construct_dict_urls(urls)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
