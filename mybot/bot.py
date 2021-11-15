@@ -27,7 +27,7 @@ class Bot(Keyboard):
         self._message: Union[m.TextMessage, m.CallbackMessage, m.PollMessage] = None
         self._update: dict = {}
         self._base_url: str = f"https://api.telegram.org/bot{token}/"
-        self.escape_chars_MarkdownV2 = self._escape_chars_setup(("_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"))
+        self.escape_chars_MarkdownV2 = self._escape_chars_setup(("_", "*", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"))
         self.escape_chars_Markdown = self._escape_chars_setup(("_", "*", "`", "["))
 
     def _escape_chars_setup(self, escape_chars: Union[list, str, tuple]):
