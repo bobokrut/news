@@ -6,10 +6,10 @@ from .news import NewsWithId, NewsWithTime
 
 
 class DtpPtz(NewsWithId):
-    def __init__(self) -> None:
+    def __init__(self, urls: tuple) -> None:
 
         super().__init__()
-        self.URLS = ("https://dtpptz.ru/",)
+        self.URLS = urls
         self.last_id = self.get_last_news_id()
 
     def get_last_news_id(self) -> int:
@@ -35,15 +35,9 @@ class DtpPtz(NewsWithId):
 
 
 class StolicaOnego(NewsWithTime):
-    def __init__(self) -> None:
+    def __init__(self, urls: tuple) -> None:
         super().__init__()
 
-        urls = (
-            "https://stolicaonego.ru/news/society/",
-            #  "https://stolicaonego.ru/news/crime/",
-            "https://stolicaonego.ru/news/incident/",
-            "https://stolicaonego.ru/news/personal/",
-        )
         self.URLS = self.construct_dict_urls(urls)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
@@ -71,10 +65,9 @@ class StolicaOnego(NewsWithTime):
 
 
 class Yle(NewsWithTime):
-    def __init__(self) -> None:
+    def __init__(self, urls: tuple) -> None:
 
         super().__init__()
-        urls = ("https://yle.fi/uutiset/osasto/novosti/",)
 
         self.URLS = self.construct_dict_urls(urls)
 
