@@ -58,13 +58,10 @@ class StolicaOnego(NewsWithTime):
             except Exception:
                 continue
 
-            if self.filter_out(filter=self.FILTER, text=text):
-                self.URLS[url] = time
-                continue
-
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
                 self.URLS[url] = time
-                yield (self.sitename, urljoin(url, news_url), text)
+                if not self.filter_out(filter=self.FILTER, text=text):
+                    yield (self.sitename, urljoin(url, news_url), text)
 
 
 class Yle(NewsWithTime):
