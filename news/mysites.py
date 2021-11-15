@@ -59,6 +59,7 @@ class StolicaOnego(NewsWithTime):
                 continue
 
             if self.filter_out(filter=self.FILTER, text=text):
+                self.URLS[url] = time
                 continue
 
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
