@@ -40,7 +40,7 @@ class StolicaOnego(NewsWithTime):
     def __init__(self, urls: tuple) -> None:
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls)
+        self.URLS = self.construct_dict_urls(urls, tz=0)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
@@ -53,7 +53,7 @@ class StolicaOnego(NewsWithTime):
             try:
 
                 news_url = article.xpath("./div[1]/a[1]/@href")[0]
-                text = article.xpath("./div[1]/a[1]/text()")[0]
+                text = article.xpath("./div[2]/text()")[0]
                 time = article.xpath("./div[3]/text()")[0]
             except Exception:
                 continue
