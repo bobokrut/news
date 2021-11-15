@@ -42,7 +42,7 @@ class StolicaOnego(NewsWithTime):
 
         self.URLS = self.construct_dict_urls(urls)
 
-        self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
+        self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая", "Коронавирус", "Ковид", "ковид", "COVID")
         self.time_format = "%d.%m.%Y, %H:%M"
 
     def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
