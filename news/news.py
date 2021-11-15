@@ -39,6 +39,7 @@ class News(ABC):
 
     def __init__(self) -> None:
         self.logger = _getLogger("main")
+        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
     @abstractmethod
     def parse(self, xml: HtmlElement, ulr: str) -> Optional[Iterator[nt.news_item]]:

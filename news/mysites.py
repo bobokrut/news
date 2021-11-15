@@ -13,7 +13,6 @@ class DtpPtz(NewsWithId):
         super().__init__()
         self.URLS = urls
         self.last_id = self.get_last_news_id()
-        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
     def get_last_news_id(self) -> int:
 
@@ -45,7 +44,6 @@ class StolicaOnego(NewsWithTime):
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
-        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
     def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
 
@@ -76,7 +74,6 @@ class Yle(NewsWithTime):
         self.URLS = self.construct_dict_urls(urls)
 
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
-        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
     def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
 
