@@ -1,7 +1,9 @@
+from typing import Iterator, Optional
 from urllib.parse import urljoin
 
 from lxml.html import HtmlElement
 
+from . import news_typing as nt
 from .news import NewsWithId, NewsWithTime
 
 
@@ -11,6 +13,7 @@ class DtpPtz(NewsWithId):
         super().__init__()
         self.URLS = urls
         self.last_id = self.get_last_news_id()
+        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
     def get_last_news_id(self) -> int:
 
@@ -21,7 +24,7 @@ class DtpPtz(NewsWithId):
 
         return id
 
-    def parse(self, xml: HtmlElement, u):
+    def parse(self, xml: HtmlElement, u) -> Optional[Iterator[nt.news_item]]:
 
         for acc in reversed(xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()<=8]/h2/a")):
 
@@ -38,12 +41,13 @@ class StolicaOnego(NewsWithTime):
     def __init__(self, urls: tuple) -> None:
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls)
+        self.URLS = self.construct_dict_urls(urls, tz=0)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая")
         self.time_format = "%d.%m.%Y, %H:%M"
+        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
-    def parse(self, xml: HtmlElement, url):
+    def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
 
         elements: list[HtmlElement] = xml.xpath("/html/body/div[5]/div/div[1]/div[2]/div/div[position() < 7]/div[2]")
 
@@ -61,7 +65,7 @@ class StolicaOnego(NewsWithTime):
 
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
                 self.URLS[url] = time
-                yield (urljoin(url, news_url), text)
+                yield (self.sitename, urljoin(url, news_url), text)
 
 
 class Yle(NewsWithTime):
@@ -72,8 +76,9 @@ class Yle(NewsWithTime):
         self.URLS = self.construct_dict_urls(urls)
 
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
+        self.sitename: nt.sitename = self.__class__.__name__.lower()
 
-    def parse(self, xml: HtmlElement, url):
+    def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
 
         elements: list[HtmlElement] = xml.xpath("/html/body/div[@id='container']/div[@id='oikea_palsta']/section/article[position() < 4]")
 
@@ -86,4 +91,4 @@ class Yle(NewsWithTime):
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
 
                 self.URLS[url] = time
-                yield (urljoin(url, news_url), text)
+                yield (self.sitename, urljoin(url, news_url), text)
