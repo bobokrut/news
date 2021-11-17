@@ -55,7 +55,7 @@ class StolicaOnego(NewsWithTime):
                 news_url = article.xpath("./div[1]/a[1]/@href")[0]
                 text1 = article.xpath("./div[1]/a[1]/text()")[0]
                 text2 = article.xpath("./div[2]/text()")[0]
-                text = " ".join((text1, text2))
+                text = ". ".join((text1, text2))
                 time = article.xpath("./div[3]/text()")[0]
             except Exception:
                 continue
