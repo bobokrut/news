@@ -45,6 +45,8 @@ class SendMessage:
     reply_to_message_id: _Union[int, None] = None
     allow_sending_without_reply: _Union[bool, None] = None
     reply_markup: _Union[str, None] = None
+    url: str = None
+    url_description: str = None
 
     def values(self):
 

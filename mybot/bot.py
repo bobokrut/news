@@ -27,7 +27,7 @@ class Bot(Keyboard):
         self._message: Union[m.TextMessage, m.CallbackMessage, m.PollMessage] = None
         self._update: dict = {}
         self._base_url: str = f"https://api.telegram.org/bot{token}/"
-        self.escape_chars_MarkdownV2 = self._escape_chars_setup(("_", "*", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"))
+        self.escape_chars_MarkdownV2 = self._escape_chars_setup(("_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"))
         self.escape_chars_Markdown = self._escape_chars_setup(("_", "*", "`", "["))
 
     def _escape_chars_setup(self, escape_chars: Union[list, str, tuple]):
@@ -97,10 +97,9 @@ class Bot(Keyboard):
 
     def send_mes(self, mess: m.SendMessage) -> None:
 
-        if mess and mess.parse_mode != "HTML":
-            mess.text = self.escape_char(mess.text, mess.parse_mode)
         url: str = self._base_url + "sendMessage"
-        params = mess.values()
+
+        params = self.construct_mess(mess=mess)
         logger.debug(params)
         response = requests.post(url, params=params).json()
 
@@ -111,8 +110,8 @@ class Bot(Keyboard):
 
         if mess and mess.parse_mode != "HTML":
             mess.text = self.escape_char(mess.text, mess.parse_mode)
-        url: str = self._base_url + "editMessageText"
         params = mess.values()
+        url: str = self._base_url + "editMessageText"
         logger.debug(params)
         response = requests.post(url, params).json()
         if not response["ok"]:
@@ -149,3 +148,14 @@ class Bot(Keyboard):
 
     def __enter__(self):
         return self
+
+    def construct_mess(self, mess: m.SendMessage):
+
+        if mess and mess.parse_mode != "HTML":
+            mess.text = self.escape_char(mess.text, mess.parse_mode)
+        params = mess.values()
+        params["url"] = params["url"].replace("\\", "\\\\")
+        params["text"] = f"[{self.escape_char(params['url_description'], mess.parse_mode)}]({params['url']}): {params['text']}"
+        del params["url"]
+        del params["url_description"]
+        return params

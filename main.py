@@ -21,7 +21,7 @@ def main():
             for site in sites:
                 for site, url, text in site.get_new():
                     with Bot(TOKEN) as bot:
-                        bot.send_mes(SendMessage(text=f"[{site}]({url}): {text}\n", chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
+                        bot.send_mes(SendMessage(url=url, url_description=site, text=text, chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
         except (KeyboardInterrupt, ConnectionError):
             pass
         except Exception as e:
