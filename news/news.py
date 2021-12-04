@@ -57,7 +57,7 @@ class News(ABC):
         pass
 
     # @_log_articles
-    def get_new(self) -> Optional[Iterator[nt.news_item]]:
+    def get_new(self) -> Iterator[nt.news_item]:
         """
         Entry method for this class which looks for new news and returns them.
 
