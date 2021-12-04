@@ -33,7 +33,7 @@ class DtpPtz(NewsWithId):
 
             if id > self.last_id:
                 self.last_id = id
-                yield (urljoin(u, url), text)
+                yield (self.sitename, urljoin(u, url), text)
 
 
 class StolicaOnego(NewsWithTime):
