@@ -12,7 +12,6 @@ lxml = "^4.6.3"
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
 flake8 = "^4.0.1"
-neovim = "^0.3.1"
 black = "^21.9b0"
 types-requests = "^2.25.11"
 snakeviz = "^2.1.0"
