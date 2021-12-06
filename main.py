@@ -33,7 +33,7 @@ async def main():
         except Exception as e:
             logger.exception(e)
 
-        exit.wait(60 * 0.5)
+        exit.wait(60 * 60)
     await session.close()
     logger.info("All done!")
 
