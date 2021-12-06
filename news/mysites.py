@@ -12,7 +12,7 @@ class DtpPtz(NewsWithId):
 
         super().__init__()
         self.URLS = urls
-        self.last_id = self.get_last_news_id() - 3
+        self.last_id = self.get_last_news_id()
 
     def get_last_news_id(self) -> int:
 
@@ -41,7 +41,7 @@ class StolicaOnego(NewsWithTime):
     def __init__(self, urls: tuple) -> None:
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls, 0)
+        self.URLS = self.construct_dict_urls(urls)
 
         self.FILTER: tuple[str, ...] = ("коронавирус", "пропал", "пропавший", "пропавшая", "Коронавирус", "Ковид", "ковид", "COVID")
         self.time_format = "%d.%m.%Y, %H:%M"
@@ -73,7 +73,7 @@ class Yle(NewsWithTime):
 
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls, 0)
+        self.URLS = self.construct_dict_urls(urls)
 
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
