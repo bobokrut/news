@@ -1,7 +1,9 @@
+import asyncio
 import logging
 from threading import Event
 
 from requests.exceptions import ConnectionError
+import aiohttp
 
 import mylogs
 from config import TOKEN
@@ -14,12 +16,16 @@ logger = logging.getLogger("main")
 exit = Event()
 
 
-def main():
+async def main():
     logger.info("START....")
+
+    session = aiohttp.ClientSession(raise_for_status=True)
     while not exit.is_set():
         try:
-            for site in sites:
-                for site, url, text in site.get_new():
+            results = await asyncio.gather( *[site.get_new(url, session) for site in sites for url in site.get_urls()] )
+            for result in results:
+                for r in result:
+                    site, url, text  = r
                     with Bot(TOKEN) as bot:
                         bot.send_mes(SendMessage(url=url, url_description=site, text=text, chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
         except (KeyboardInterrupt, ConnectionError):
@@ -27,8 +33,8 @@ def main():
         except Exception as e:
             logger.exception(e)
 
-        exit.wait(60 * 5)
-
+        exit.wait(60 * 0.5)
+    await session.close()
     logger.info("All done!")
 
 
@@ -44,4 +50,4 @@ if __name__ == "__main__":
     for sig in ("TERM", "HUP", "INT"):
         signal.signal(getattr(signal, "SIG" + sig), quit)
 
-    main()
+    asyncio.run(main())
