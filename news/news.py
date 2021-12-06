@@ -4,11 +4,13 @@ from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
 from typing import Iterator, Optional, Union
+from itertools import chain
 
 import requests
 from config import HEADERS
 from lxml import html
 from lxml.html import HtmlElement
+import aiohttp
 
 from . import news_typing as nt
 
@@ -37,12 +39,15 @@ class News(ABC):
         - ``self.URLS: Iterable[]``
     """
 
+    def get_urls(self):
+        return self.URLS
+
     def __init__(self) -> None:
         self.logger = _getLogger("main")
         self.sitename: nt.sitename = self.__class__.__name__.lower()  # type: ignore
 
     @abstractmethod
-    def parse(self, xml: HtmlElement, ulr: str) -> Optional[Iterator[nt.news_item]]:
+    async def parse(self, xml: HtmlElement, ulr: str) -> Optional[Iterator[nt.news_item]]:
 
         """
         Method which should contain parse logic.
@@ -57,19 +62,22 @@ class News(ABC):
         pass
 
     # @_log_articles
-    def get_new(self) -> Iterator[nt.news_item]:
+    async def get_new(self, url: str, session: aiohttp.ClientSession) -> Iterator[nt.news_item]:
         """
         Entry method for this class which looks for new news and returns them.
 
         Returns:
             dict[url, article_text]: returns dict {url: text} with all new founded news or is empty if nothing was found
         """
-        for u in self.URLS:  # type: ignore
-            xml: HtmlElement = self.get_xml(u)
+        result = []
+        async with session.get(url) as resp:
+            xml: HtmlElement = html.fromstring(await resp.text())
             if xml is not None:
-                yield from self.parse(xml, u)
+                result.extend(await self.parse(xml, url))
+        return result
 
     def get_xml(self, url: str) -> Optional[html.HtmlElement]:
+
         """
         Makes request to the website, gets html string and converts it to the parsible object.
 
@@ -143,6 +151,8 @@ class NewsWithTime(News):
         """
         super().__init__()
 
+    def get_urls(self):
+        return self.URLS.keys()
     def construct_dict_urls(self, urls: tuple[str, ...], tz: int = +3):
 
         return {url: self.get_time(tz) for url in urls}

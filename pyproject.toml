@@ -8,6 +8,7 @@ authors = ["bobokrut <egor-evlampiev@mail.ru>"]
 python = "^3.9"
 requests = "^2.26.0"
 lxml = "^4.6.3"
+aiohttp = "^3.8.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
