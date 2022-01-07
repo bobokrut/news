@@ -73,7 +73,7 @@ class Yle(NewsWithTime):
 
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls, -6)
+        self.URLS = self.construct_dict_urls(urls)
 
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
