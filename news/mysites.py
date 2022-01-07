@@ -73,22 +73,23 @@ class Yle(NewsWithTime):
 
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls)
+        self.URLS = self.construct_dict_urls(urls, -6)
 
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
     async def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
         result = []
-        elements: list[HtmlElement] = xml.xpath("/html/body/div[@id='container']/div[@id='oikea_palsta']/section/article[position() < 4]")
+        elements: list[HtmlElement] = xml.xpath("/html/body/div[@id='app']/div[2]/div/div/div[2]/div[3]/div[2]/ol/li[position() < 4]")
 
         for article in elements:
 
-            news_url: str = article.xpath("./h1/a[1]/@href")[0]
-            text: str = article.xpath("./h1/a/text()")[0][1:-1]  # cutting off \n at the begging and at the end
-            time = article.xpath("./time/@datetime")[0]
+            news_url: str = article.xpath("./div[1]/a[1]/@href")[0]
+            text: str = article.xpath("./div[1]/a[1]/div[1]/h6[1]/text()")[0]  # cutting off \n at the begging and at the end
+            time = article.xpath("./div[1]/a[1]/div[1]/div[1]/time[1]/@datetime")[0]
 
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
 
                 self.URLS[url] = time
                 result.append((self.sitename, urljoin(url, news_url), text))
+
         return result
