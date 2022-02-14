@@ -79,12 +79,12 @@ class Yle(NewsWithTime):
 
     async def parse(self, xml: HtmlElement, url) -> Optional[Iterator[nt.news_item]]:
         result = []
-        elements: list[HtmlElement] = xml.xpath("/html/body/div[3]/div[2]/main/div/div[2]/div[3]/div[2]/ol/li[position() < 6]/div/div/div[1]")
+        elements: list[HtmlElement] = xml.get_element_by_id("yle__contentAnchor").xpath("./div/div[2]/div[3]/div[2]/ol/li[position() < 6]/div/div/div[1]")
 
         for article in elements:
 
-            news_url: str = article.xpath("./h6/a[1]/@href")[0]
-            text: str = article.xpath("./h6[1]/text()")[0]  # cutting off \n at the begging and at the end
+            news_url: str = article.xpath("./h6[1]/a[1]/@href")[0]
+            text: str = article.xpath("./h6[1]/a[1]/text()")[0]  # cutting off \n at the begging and at the end
             time = article.xpath("./div[1]/time[1]/@datetime")[0]
 
             if time := self.check_time_date(time, self.time_format, self.URLS[url]):
