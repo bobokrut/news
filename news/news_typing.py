@@ -1,6 +1,7 @@
-from typing import NewType
+from typing import NewType 
 
 sitename = NewType("sitename", str)
 url = NewType("url", str)
 article_text = NewType("article_text", str)
 news_item = NewType("news_item", tuple[sitename, url, article_text])
+'''tuple[sitename, url, acrticle_text]'''

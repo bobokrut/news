@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from functools import wraps
 from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
-from typing import Iterator, Optional, Union
-from itertools import chain
 
 import requests
 from config import HEADERS
@@ -13,19 +10,6 @@ from lxml.html import HtmlElement
 import aiohttp
 
 from . import news_typing as nt
-
-# def _log_articles(fn):
-#     @wraps(fn)
-#     def wrapped(*args, **kwargs):
-
-#         result: Generator[tuple[str, None, None]] = fn(*args, **kwargs)
-#         if result:
-#             args[0].logger.info(f"Found some article(s) on {args[0].__class__.__name__}")
-#         else:
-#             args[0].logger.info(f"Nothing was found on {args[0].__class__.__name__} ...")
-#         return result
-
-#     return wrapped
 
 
 class News(ABC):
@@ -39,15 +23,15 @@ class News(ABC):
         - ``self.URLS: Iterable[]``
     """
 
-    def get_urls(self):
-        return self.URLS
-
     def __init__(self) -> None:
         self.logger = _getLogger("main")
         self.sitename: nt.sitename = self.__class__.__name__.lower()  # type: ignore
 
+    def get_urls(self):
+        return self.URLS
+
     @abstractmethod
-    async def parse(self, xml: HtmlElement, ulr: str) -> Optional[Iterator[nt.news_item]]:
+    async def parse(self, xml: HtmlElement, ulr: str) -> list[nt.news_item]:
 
         """
         Method which should contain parse logic.
@@ -62,7 +46,7 @@ class News(ABC):
         pass
 
     # @_log_articles
-    async def get_new(self, url: str, session: aiohttp.ClientSession) -> Iterator[nt.news_item]:
+    async def get_new(self, url: str, session: aiohttp.ClientSession) -> list[nt.news_item]:
         """
         Entry method for this class which looks for new news and returns them.
 
@@ -76,7 +60,7 @@ class News(ABC):
                 result.extend(await self.parse(xml, url))
         return result
 
-    def get_xml(self, url: str) -> Optional[html.HtmlElement]:
+    def get_xml(self, url: str) -> html.HtmlElement | None:
 
         """
         Makes request to the website, gets html string and converts it to the parsible object.
@@ -153,6 +137,7 @@ class NewsWithTime(News):
 
     def get_urls(self):
         return self.URLS.keys()
+
     def construct_dict_urls(self, urls: tuple[str, ...], tz: int = +3):
 
         return {url: self.get_time(tz) for url in urls}
@@ -164,21 +149,21 @@ class NewsWithTime(News):
 
         return time
 
-    def check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> Union[struct_time, None]:
+    def check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> struct_time | None:
         """
-        Checks if given datetime of article is bigger than previous one. If yes returns new `struct_time` else `None`
+        checks if given datetime of article is bigger than previous one. if yes returns new `struct_time` else `none`
 
-        Args:
+        args:
             time_to_check (str): datetime of article
             date_time_format (str): format of time_to_check. must have correct syntax according to the default python time formatting
-            current_time (struct_time): of last sent article from certain url. Should be located in ``self.URLS[url]``
+            current_time (struct_time): of last sent article from certain url. should be located in ``self.urls[url]``
 
-        Returns:
-            Union[struct_time, None]: None if all articles from webpage are old else returns time of new article
+        returns:
+            union[struct_time, none]: none if all articles from webpage are old else returns time of new article
         """
 
         date_time_struct: struct_time = strptime(time_to_check, date_time_format)
-
+        print(f"{date_time_struct=}\n{current_time=}\n")
         if date_time_struct > current_time:
             return date_time_struct
 
