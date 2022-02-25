@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
-from time import struct_time, strptime
-from loguru import logger # yle patch
 
 from lxml.html import HtmlElement
 
 from . import news_typing as nt
-from .news import NewsWithId, NewsWithTime
+from .news import NewsWithId, NewsWithTime, ParseException
 
 
 class DtpPtz(NewsWithId):
@@ -31,7 +29,13 @@ class DtpPtz(NewsWithId):
 
         result = []
 
-        for acc in reversed(xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()<=8]/h2/a")):
+        elements = xml.xpath("/html/body/main/div[2]/div/div[1]/ul/li[position()<=8]/h2/a")
+
+        if not elements and not self.error_occured:
+            self.error_occured = True
+            raise ParseException("Parsing exception in DtpPtz")
+
+        for acc in reversed(elements):
 
             url = acc.xpath("./@href")[0]
             text = acc.xpath("./text()")[0]
@@ -58,6 +62,10 @@ class StolicaOnego(NewsWithTime):
 
         result = []
         elements: list[HtmlElement] = xml.xpath("/html/body/div[5]/div/div[1]/div[2]/div/div[position() < 7]/div[2]")
+
+        if not elements and not self.error_occured:
+            self.error_occured = True
+            raise ParseException("Parsing exception in StolicaOnego")
 
         for article in reversed(elements):
             
@@ -92,6 +100,10 @@ class Yle(NewsWithTime):
 
         result = []
         elements: list[HtmlElement] = xml.get_element_by_id("yle__contentAnchor").xpath("./div/main/div/div[2]/ol/li[position() < 6]/div/div[1]")
+
+        if not elements and not self.error_occured:
+            self.error_occured = True
+            raise ParseException("Parsing exception in Yle")
 
         for article in reversed(elements):
 

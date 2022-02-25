@@ -10,6 +10,7 @@ from config import TOKEN
 from mybot import Bot
 from mybot.messages import SendMessage
 from news import sites
+from news.news import ParseException
 
 
 exit = Event()
@@ -29,6 +30,10 @@ async def main():
                         bot.send_mes(SendMessage(url=url, url_description=site, text=text, chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
         except (KeyboardInterrupt, ConnectionError):
             pass
+        except ParseException as e:
+            with Bot(TOKEN) as bot:
+                bot.send_mes(SendMessage(text=f"❗Error❗:\n{str(e)}", chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
+                logger.error(e)
         except Exception as e:
             logger.exception(e)
 

@@ -11,6 +11,8 @@ import aiohttp
 
 from . import news_typing as nt
 
+class ParseException(Exception):
+    pass
 
 class News(ABC):
     """Base class for news parsing
@@ -26,6 +28,7 @@ class News(ABC):
     def __init__(self) -> None:
         self.logger = logger.bind(name="main")
         self.sitename: nt.sitename = self.__class__.__name__.lower()  # type: ignore
+        self.error_occured = False
 
     def get_urls(self):
         return self.URLS

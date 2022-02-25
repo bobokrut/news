@@ -154,8 +154,11 @@ class Bot(Keyboard):
         if mess and mess.parse_mode != "HTML":
             mess.text = self.escape_char(mess.text, mess.parse_mode)
         params = mess.values()
-        params["url"] = params["url"].replace("\\", "\\\\")
-        params["text"] = f"[{self.escape_char(params['url_description'], mess.parse_mode)}]({params['url']}): {params['text']}"
-        del params["url"]
-        del params["url_description"]
+        if params.get("url", None):
+
+            params["url"] = params["url"].replace("\\", "\\\\")
+            params["text"] = f"[{self.escape_char(params['url_description'], mess.parse_mode)}]({params['url']}): {params['text']}"
+            del params["url"]
+            del params["url_description"]
+
         return params
