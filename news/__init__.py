@@ -11,6 +11,7 @@ with open("urls_conf.json", "r") as _f:
 
 _base_classes = tuple(cls for _, cls in _inspect.getmembers(_sys.modules["news.news"], _inspect.isclass) if cls.__module__ == "news.news")
 
-sites: tuple[_News, ...] = tuple(site(tuple(_j_urls[site.__name__]["urls"])) for cls in _base_classes for site in cls.__subclasses__() if site not in _base_classes)
+sites: tuple[_News, ...] = tuple(site(tuple(_j_urls[site.__name__]["urls"])) for cls in _base_classes for site in cls.__subclasses__() if site not in _base_classes and _j_urls[site.__name__]["active"])
+print(len(sites))
 
 del _j_urls
