@@ -1,12 +1,12 @@
-from logging import getLogger
 from typing import Iterator, Tuple, Union
 
 import requests
+from loguru import logger as _logger
 
 from . import messages as m
 from .keyboard import Keyboard
 
-logger = getLogger("bot")
+logger = _logger.bind(name="bot")
 
 
 class BotException(Exception):

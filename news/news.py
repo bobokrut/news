@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from logging import getLogger as _getLogger
 from time import strftime, strptime, struct_time
+from loguru import logger
 
 import requests
 from config import HEADERS
@@ -24,7 +24,7 @@ class News(ABC):
     """
 
     def __init__(self) -> None:
-        self.logger = _getLogger("main")
+        self.logger = logger.bind(name="main")
         self.sitename: nt.sitename = self.__class__.__name__.lower()  # type: ignore
 
     def get_urls(self):
@@ -163,7 +163,6 @@ class NewsWithTime(News):
         """
 
         date_time_struct: struct_time = strptime(time_to_check, date_time_format)
-        print(f"{date_time_struct=}\n{current_time=}\n")
         if date_time_struct > current_time:
             return date_time_struct
 

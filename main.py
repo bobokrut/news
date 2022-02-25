@@ -1,9 +1,9 @@
 import asyncio
-import logging
 from threading import Event
 
 from requests.exceptions import ConnectionError
 import aiohttp
+from loguru import logger as _logger
 
 import mylogs
 from config import TOKEN
@@ -11,10 +11,9 @@ from mybot import Bot
 from mybot.messages import SendMessage
 from news import sites
 
-logger = logging.getLogger("main")
 
 exit = Event()
-
+logger = _logger.bind(name="main")
 
 async def main():
     logger.info("START....")

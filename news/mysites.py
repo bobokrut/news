@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
-from time import struct_time, strptime # yle patch
+from time import struct_time, strptime
+from loguru import logger # yle patch
 
 from lxml.html import HtmlElement
 
@@ -84,17 +85,17 @@ class Yle(NewsWithTime):
 
         super().__init__()
 
-        self.URLS = self.construct_dict_urls(urls)
+        self.URLS = self.construct_dict_urls(urls, tz=+2)
         self.time_format = "%Y-%m-%dT%H:%M:%S%z"
 
     async def parse(self, xml: HtmlElement, url) -> list[nt.news_item]:
 
         result = []
-        elements: list[HtmlElement] = xml.get_element_by_id("yle__contentAnchor").xpath("./div/div[2]/div[3]/div[2]/ol/li[position() < 6]/div/div/div[1]")
+        elements: list[HtmlElement] = xml.get_element_by_id("yle__contentAnchor").xpath("./div/main/div/div[2]/ol/li[position() < 6]/div/div[1]")
 
         for article in reversed(elements):
 
-            news_url: str = article.xpath("./h3[1]/a[1]/@href")[0]
+            news_url: str = article.xpath("./h3/a/@href")[0]
             text: str = article.xpath("./h3[1]/a[1]/text()")[0]  
             time = article.xpath("./div[1]/time[1]/@datetime")[0]
 
@@ -105,11 +106,11 @@ class Yle(NewsWithTime):
 
         return result
 
-    def check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> struct_time | None:
-        """yle time patch, hope temporary"""
+    # def check_time_date(self, time_to_check: str, date_time_format: str, current_time: struct_time) -> struct_time | None:
+        # """yle time patch, hope temporary"""
 
-        date_time_struct = (datetime.strptime(time_to_check, date_time_format) - timedelta(hours=1)).timetuple()
-        if date_time_struct > current_time:
-            return date_time_struct
+        # date_time_struct = (datetime.strptime(time_to_check, date_time_format) - timedelta(hours=1)).timetuple()
+        # if date_time_struct > current_time:
+            # return date_time_struct
 
-        return None
+        # return None
