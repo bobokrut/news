@@ -15,7 +15,8 @@
     },
     "Yle": {
         "urls": [
-            "https://yle.fi/novosti"
+            "https://yle.fi/novosti",
+            "https://yle.fi/news"
         ],
         "active": true
     }
