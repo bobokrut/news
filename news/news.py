@@ -11,8 +11,10 @@ import aiohttp
 
 from . import news_typing as nt
 
+
 class ParseException(Exception):
     pass
+
 
 class News(ABC):
     """Base class for news parsing
@@ -27,14 +29,16 @@ class News(ABC):
 
     def __init__(self) -> None:
         self.logger = logger.bind(name="main")
-        self.sitename: nt.sitename = self.__class__.__name__.lower()  # type: ignore
-        self.error_occured = False
+        self.site_name: nt.sitename = self.__class__.__name__.lower()  # type: ignore
+        self.parse_error_occurred = False
+        self.URLS: tuple[str] | dict[str, struct_time] = ...
 
-    def get_urls(self):
+    def get_urls(self) -> dict[str, struct_time] | tuple[str]:
+
         return self.URLS
 
     @abstractmethod
-    async def parse(self, xml: HtmlElement, ulr: str) -> list[nt.news_item]:
+    def parse(self, xml: HtmlElement, ulr: str) -> list[nt.news_item] | list:
 
         """
         Method which should contain parse logic.
@@ -44,35 +48,39 @@ class News(ABC):
             ulr (str): url of the website
 
         Returns:
-            dict[url, article_text]: returns dict {url: text} with all new founded news or is empty if nothing was found
+            list of found new articles or empty list if nothing was found
         """
         pass
 
-    # @_log_articles
-    async def get_new(self, url: str, session: aiohttp.ClientSession) -> list[nt.news_item]:
+    async def get_new(self, url: str, session: aiohttp.ClientSession) -> list[nt.news_item] | list:
         """
         Entry method for this class which looks for new news and returns them.
 
+        Args:
+            url: url of the site
+            session: main session
+
         Returns:
-            dict[url, article_text]: returns dict {url: text} with all new founded news or is empty if nothing was found
+            list of found items or empty list
+
         """
         result = []
         async with session.get(url) as resp:
             xml: HtmlElement = html.fromstring(await resp.text())
             if xml is not None:
-                result.extend(await self.parse(xml, url))
+                result.extend(self.parse(xml, url))
         return result
 
     def get_xml(self, url: str) -> html.HtmlElement | None:
 
         """
-        Makes request to the website, gets html string and converts it to the parsible object.
+        Makes request to the website, gets html string and converts it to the parsable object.
 
         Args:
-            url (str): url of the website to request
+            url: url of the website to request
 
         Returns:
-            html.HtmlElement: returts object which can parse given html string
+            html.HtmlElement: returns object which can parse given html string
         """
 
         news = requests.get(url, headers=HEADERS)
@@ -83,21 +91,21 @@ class News(ABC):
             self.logger.warning(f"Page {url} requested with code: {news.status_code}")
             return None
 
-    def filter_out(self, filter: tuple[str, ...], text: str) -> bool:
+    def filter_out(self, words_to_filter: tuple[str, ...], text: str) -> bool:
         """
-        Endicates if string conains any word from filter list
+        Indicates if string contains any word from filter list
 
         Args:
-            filter (list[str]): list with words to filter
+            words_to_filter (list[str]): list with words to filter
             text (str): text where to look for
 
         Returns:
             bool: True if any word was found in the text else False
         """
-        result = any(word in text for word in filter)
+        result = any(word in text for word in words_to_filter)
         if result:
             self.logger.info(f"Filtered: {text}")
-        return any(word in text for word in filter)
+        return any(word in text for word in words_to_filter)
 
 
 class NewsWithId(News):
@@ -107,7 +115,7 @@ class NewsWithId(News):
     @abstractmethod
     def get_last_news_id(self) -> int:
         """
-        Method used to dynamicly update last article id on startup. Is called once from ``__int__`` method
+        Method used to dynamically update last article id on startup. Is called once from ``__int__`` method
 
         Returns:
             [int]: last article id
@@ -132,22 +140,22 @@ class NewsWithTime(News):
     def __init__(self) -> None:
         """
         Creates self.time with correct time_struct considering given timezone
-
-        Args:
-            td (int): timezone as `+3` or `-2` (default: +3)
         """
         super().__init__()
 
     def get_urls(self):
         return self.URLS.keys()
 
-    def construct_dict_urls(self, urls: tuple[str, ...], tz: int = +3):
+    def construct_dict_urls(self, urls: tuple[str, ...], timezone_offset: int = +3) -> dict[str, struct_time]:
+        """
+        Creates dictionary of site url and timetuple (time in a tuple format) for further updates
+        Is used for self.URLS in `__init__()`
+        """
+        return {url: self.get_time(timezone_offset) for url in urls}
 
-        return {url: self.get_time(tz) for url in urls}
+    def get_time(self, timezone_offset: int) -> struct_time:
 
-    def get_time(self, tz: int) -> struct_time:
-
-        time = (datetime.now(timezone(timedelta(hours=tz)))).timetuple()
+        time = (datetime.now(timezone(timedelta(hours=timezone_offset)))).timetuple()
         self.logger.debug(f"{self.__class__.__name__} started time: {strftime('%Y-%m-%dT%H:%M:%SZ', time)}")
 
         return time
@@ -156,12 +164,12 @@ class NewsWithTime(News):
         """
         checks if given datetime of article is bigger than previous one. if yes returns new `struct_time` else `none`
 
-        args:
+        Args:
             time_to_check (str): datetime of article
             date_time_format (str): format of time_to_check. must have correct syntax according to the default python time formatting
             current_time (struct_time): of last sent article from certain url. should be located in ``self.urls[url]``
 
-        returns:
+        Returns:
             union[struct_time, none]: none if all articles from webpage are old else returns time of new article
         """
 
