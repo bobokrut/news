@@ -66,7 +66,7 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
     feed = feedparser.parse(url, agent=HEADERS["user-agent"])
     articles = feed['entries']
 
-    for article in reversed(articles):
+    for article in reversed(articles[:len(articles)//3]):
         if (time := article['published_parsed']) > previous_time:
             title = article['title']
             link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
