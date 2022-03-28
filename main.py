@@ -1,58 +1,121 @@
-import asyncio
 from threading import Event
+import time
+from os import environ
 
-from requests.exceptions import ConnectionError
-import aiohttp
-from loguru import logger as _logger
+from loguru import logger
+import yaml
+import feedparser
+import requests
 
-import mylogs
-from config import TOKEN
-from mybot import Bot
-from mybot.messages import SendMessage
-from news import sites
-from news.news import ParseException
-
-
-exit = Event()
-logger = _logger.bind(name="main")
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 
-async def main():
+if not (TELEGRAM_TOKEN := environ.get("TOKEN")):
+
+    print("TELEGRAM_TOKEN is not specified!")
+    exit(1)
+
+EXIT = Event()
+DEBUG = True if (DEBUG := environ.get("DEBUG")) and DEBUG == "Yes" else False
+CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
+CHAT_ID: int = 387387555
+TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+CONFIG_FILE = FILE if (FILE := environ.get("CONFIG_FILE")) else "config.yml"
+
+def print_message(site_name: str, url: str, text: str) -> None:
+
+    logger.info(f"\n\t{site_name=}\n\t{url=}\n\t{text=}")
+
+def send_mes(site_name: str, url: str, text: str) -> None:
+    
+    params: dict[str, str | int] = {}
+    params["chat_id"] = CHAT_ID
+    params["parse_mode"] = "MarkdownV2"
+    params["disable_web_page_preview"] = True
+    params["disable_notification"] = True
+
+    text = text.translate(CHAR_TO_ESCAPE)
+    params["text"] = f"[{site_name}]({url}): {text}"
+    logger.debug(params)
+
+    response = requests.post(TELEGRAM_LINK, params=params).json()
+
+    if not response["ok"]:
+        logger.exception("TELEGRAM ERROR: " + str(response))
+
+def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]], time.struct_time | None]:
+    # returns (site_name, url, text), time
+    to_return = []
+    feed = feedparser.parse(url)
+    articles = feed['entries']
+
+    for article in reversed(articles):
+        if (time := article['published_parsed']) > previous_time:
+            title = article['title']
+            link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
+            text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
+            to_return.append((site_name, link, f"{title}\n\n{text}"))
+            previous_time = time
+
+    return to_return, previous_time 
+
+def get_time_of_last_article(url: str) -> time.struct_time:
+
+        feed = feedparser.parse(url)
+        return feed['entries'][1]["published_parsed"]
+
+
+def load_urls() -> dict:
+
+    with open (CONFIG_FILE, "r") as f:
+
+        sites: dict[str, dict] = yaml.safe_load(f)["sites"]
+
+    for k in sites.copy().keys():
+
+        if not sites[k]["active"]:
+            del sites[k]
+
+    for site in sites.values():
+
+        for i in range(len(site["urls"])):
+
+            site["urls"][i]["time"] = get_time_of_last_article(site["urls"][i]["url"])
+
+    return sites
+
+def main():
 
     logger.info("START....")
-    session = aiohttp.ClientSession(raise_for_status=True)
-
-    while not exit.is_set():
-
+    sites = load_urls()
+    while not EXIT.is_set():
         try:
-            results = await asyncio.gather(*[site.get_new(url, session) for site in sites for url in site.get_urls()])
-
-            for result in results:
-                for r in result:
-                    site, url, text = r
-                    with Bot(TOKEN) as bot:
-                        bot.send_mes(SendMessage(url=url, url_description=site, text=text, chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
-
-        except (KeyboardInterrupt, ConnectionError):
-            pass
-
-        except ParseException as e:
-
-            with Bot(TOKEN) as bot:
-                bot.send_mes(SendMessage(text=f"❗Error❗:\n{str(e)}", chat_id=387387555, disable_notification=True, disable_web_page_preview=True, parse_mode="MarkdownV2"))
-                logger.error(e)
+            for site_name, site_data in sites.items():
+                for d_url in site_data["urls"]:
+                    new, time = parse(site_name, d_url["url"], d_url["time"])
+                    if new:
+                        for article in new:
+                            site, url, text = article
+                            if DEBUG:
+                                print_message(url=url, site_name=site_name, text=text)
+                            else:
+                                send_mes(url=url, site_name=site, text=text)
+                        d_url["time"] = time
 
         except Exception as e:
             logger.exception(e)
 
-        exit.wait(60 * 60)
-    await session.close()
+        EXIT.wait(60 * 10)
     logger.info("All done!")
 
 
 def quit(signo, _frame):
     logger.info("Interrupted by %d, shutting down" % signo)
-    exit.set()
+    EXIT.set()
 
 
 if __name__ == "__main__":
@@ -62,4 +125,5 @@ if __name__ == "__main__":
     for sig in ("TERM", "HUP", "INT"):
         signal.signal(getattr(signal, "SIG" + sig), quit)
 
-    asyncio.run(main())
+    main()
+

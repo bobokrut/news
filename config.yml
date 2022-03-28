@@ -1,0 +1,29 @@
+sites:
+
+  yle:
+    description: Finnish news site
+    active: true
+    urls:
+      - url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
+      - url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
+
+  dtpptz:
+    description: Road incidents in Petrozavodsk
+    active: false
+    urls:
+      - url: "https://dtpptz.ru/"
+
+  stolicaonego:
+    description: Local news from Petrozavodsk
+    active: false
+    urls:
+      - url: "https://stolicaonego.ru/news/society/"
+      - url: "https://stolicaonego.ru/news/incident/"
+      - url: "https://stolicaonego.ru/news/personal/"
+
+  meduza:
+
+    description: Russian news
+    active: true
+    urls:
+      - url: "https://meduza.io/rss/news"
