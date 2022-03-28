@@ -1,6 +1,7 @@
 from threading import Event
 import time
 from os import environ
+import ast
 
 from loguru import logger
 import yaml
@@ -25,8 +26,9 @@ if not (CHAT_ID := environ.get("CHAT_ID")):
     exit(1)
 
 DEBUG = (environ.get("DEBUG", False) == 'True')
-LOGGING_LEVEL = environ.get("LOGGING_LEVEL", "INFO")
+LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
+HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
 CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -37,7 +39,7 @@ logger.level(LOGGING_LEVEL)
 
 def print_message(site_name: str, url: str, text: str) -> None:
 
-    logger.info(f"\n\t{site_name=}\n\t{url=}\n\t{text=}")
+    logger.debug(f"\n\t{site_name=}\n\t{url=}\n\t{text=}")
 
 
 def send_mes(site_name: str, url: str, text: str) -> None:
@@ -61,7 +63,7 @@ def send_mes(site_name: str, url: str, text: str) -> None:
 def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]], time.struct_time | None]:
     # returns (site_name, url, text), time
     to_return = []
-    feed = feedparser.parse(url)
+    feed = feedparser.parse(url, agent=HEADERS["user-agent"])
     articles = feed['entries']
 
     for article in reversed(articles):
@@ -77,7 +79,7 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
 
 def get_time_of_last_article(url: str) -> time.struct_time:
 
-        feed = feedparser.parse(url)
+        feed = feedparser.parse(url, agent=HEADERS["user-agent"])
         return feed['entries'][0]["published_parsed"]
 
 
