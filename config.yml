@@ -34,3 +34,9 @@ sites:
     active: true
     urls:
       - url: "https://novayagazeta.ru/feed/rss"
+
+  radiot:
+    description: Tech news from radio-t
+    active: true
+    urls:
+      - url: "https://news.radio-t.com/rss"
