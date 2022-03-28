@@ -19,16 +19,26 @@ if not (TELEGRAM_TOKEN := environ.get("TOKEN")):
     print("TELEGRAM_TOKEN is not specified!")
     exit(1)
 
-EXIT = Event()
-DEBUG = True if (DEBUG := environ.get("DEBUG")) and DEBUG == "Yes" else False
+if not (CHAT_ID := environ.get("CHAT_ID")):
+
+    print("CHAT_ID is not specified!")
+    exit(1)
+
+DEBUG = (environ.get("DEBUG", False) == 'True')
+LOGGING_LEVEL = environ.get("LOGGING_LEVEL", "INFO")
+CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
+
 CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
-CHAT_ID: int = 387387555
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-CONFIG_FILE = FILE if (FILE := environ.get("CONFIG_FILE")) else "config.yml"
+EXIT = Event()
+
+logger.level(LOGGING_LEVEL)
+
 
 def print_message(site_name: str, url: str, text: str) -> None:
 
     logger.info(f"\n\t{site_name=}\n\t{url=}\n\t{text=}")
+
 
 def send_mes(site_name: str, url: str, text: str) -> None:
     
@@ -47,6 +57,7 @@ def send_mes(site_name: str, url: str, text: str) -> None:
     if not response["ok"]:
         logger.exception("TELEGRAM ERROR: " + str(response))
 
+
 def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]], time.struct_time | None]:
     # returns (site_name, url, text), time
     to_return = []
@@ -62,6 +73,7 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
             previous_time = time
 
     return to_return, previous_time 
+
 
 def get_time_of_last_article(url: str) -> time.struct_time:
 
@@ -87,6 +99,7 @@ def load_urls() -> dict:
             site["urls"][i]["time"] = get_time_of_last_article(site["urls"][i]["url"])
 
     return sites
+
 
 def main():
 
