@@ -2,5 +2,4 @@
 .vscode
 logs
 **/__pycache__
-.env
 tests/*
