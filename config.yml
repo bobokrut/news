@@ -27,3 +27,10 @@ sites:
     active: true
     urls:
       - url: "https://meduza.io/rss/news"
+  
+  novayagazeta:
+
+    description: Russian news
+    active: true
+    urls:
+      - url: "https://novayagazeta.ru/feed/rss"
