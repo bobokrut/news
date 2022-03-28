@@ -66,7 +66,7 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
 def get_time_of_last_article(url: str) -> time.struct_time:
 
         feed = feedparser.parse(url)
-        return feed['entries'][1]["published_parsed"]
+        return feed['entries'][0]["published_parsed"]
 
 
 def load_urls() -> dict:
