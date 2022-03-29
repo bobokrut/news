@@ -2,8 +2,10 @@ from threading import Event
 import time
 from os import environ
 import ast
+import sys
 
 from loguru import logger
+import loguru
 import yaml
 import feedparser
 import requests
@@ -25,13 +27,17 @@ if not (CHAT_ID := environ.get("CHAT_ID")):
     print("CHAT_ID is not specified!")
     exit(1)
 
+BG_BRIGHT_YELLOW = "\u001b[33;1m\u001b[7m"
+COLOR_RESET = "\u001b[0m"
+FG_BRIGHT_YELLOW = "\u001b[33;1m"
+
 DEBUG = (environ.get("DEBUG", False) == 'True')
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
-logger.info(f"Debug is set to {DEBUG}")
-logger.info(f"Logging level is set to {LOGGING_LEVEL}")
+logger.info(f"Debug is set to {BG_BRIGHT_YELLOW}{DEBUG}{COLOR_RESET}")
+logger.info(f"Logging level is set to {BG_BRIGHT_YELLOW}{LOGGING_LEVEL}{COLOR_RESET}")
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
-logger.info(f"Config file is {CONFIG_FILE}")
+logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
 
 HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
@@ -39,7 +45,13 @@ CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', 
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
 
-logger.level(LOGGING_LEVEL)
+def formatter(record) -> str:
+    if record["level"].no == 20:
+        return "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>\n"
+    return loguru._defaults.LOGURU_FORMAT + "\n"
+
+logger.remove()
+logger.add(sys.stderr, format=formatter, level=LOGGING_LEVEL)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -69,8 +81,16 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
     # returns (site_name, url, text), time
     to_return = []
     feed = feedparser.parse(url, agent=HEADERS["user-agent"])
-    articles = feed['entries']
 
+    if error := feed.get("bozo_exception"):
+        
+        if not feed['entries']:
+            logger.error(f"{site_name}: {error}")
+            return to_return, previous_time
+
+        logger.warning(f"{site_name}: {error}")
+
+    articles = feed['entries']
     for article in reversed(articles[:len(articles)//3]):
         if (time := article['published_parsed']) > previous_time:
             title = article['title']
@@ -83,9 +103,17 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
 
 
 def get_time_of_last_article(url: str) -> time.struct_time:
-
+        
+        index: int = 2 if DEBUG else 0
         feed = feedparser.parse(url, agent=HEADERS["user-agent"])
-        return feed['entries'][0]["published_parsed"]
+        p_time: time.struct_time = feed['entries'][index]["published_parsed"]
+        
+        _url = url.removeprefix('https://')
+        _site = _url[:_url.find('/')]
+        _params = _url[_url.find("?"):] if _url.find("?") != -1 else ""
+        _url = _site + _params if _params else _site
+        logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{_url}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
+        return p_time
 
 
 def load_urls() -> dict:
@@ -110,10 +138,11 @@ def load_urls() -> dict:
 
 def main():
 
-    logger.info("START....")
-    logger.info("Loading urls...")
+    logger.info("Start....")
+    logger.info("Loading urls....")
     sites = load_urls()
-    logger.info("Done!")
+    logger.success("Done!")
+    logger.info("Starting main loop....")
     while not EXIT.is_set():
         try:
             for site_name, site_data in sites.items():
