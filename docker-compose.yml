@@ -8,8 +8,9 @@ services:
         build: .
         restart: unless-stopped
         platform: linux/arm/v7
-        env_file: 
+        env_file:
           - .env
+        tty: true
 
 
 
