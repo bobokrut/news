@@ -27,7 +27,12 @@ if not (CHAT_ID := environ.get("CHAT_ID")):
 
 DEBUG = (environ.get("DEBUG", False) == 'True')
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
+logger.info(f"Debug is set to {DEBUG}")
+logger.info(f"Logging level is set to {LOGGING_LEVEL}")
+
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
+logger.info(f"Config file is {CONFIG_FILE}")
+
 HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
 CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
@@ -106,7 +111,9 @@ def load_urls() -> dict:
 def main():
 
     logger.info("START....")
+    logger.info("Loading urls...")
     sites = load_urls()
+    logger.info("Done!")
     while not EXIT.is_set():
         try:
             for site_name, site_data in sites.items():
