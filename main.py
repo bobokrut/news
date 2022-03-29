@@ -82,24 +82,41 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
     to_return = []
     feed = feedparser.parse(url, agent=HEADERS["user-agent"])
 
-    if error := feed.get("bozo_exception"):
-        
-        if not feed['entries']:
-            logger.error(f"{site_name}: {error}")
+    match (feed.get("bozo_exception"), feed['entries']):
+
+        case (feedparser.CharacterEncodingOverride() | None, [*articles]):
+
+            for article in reversed(articles[:len(articles)//3]):
+                if (time := article['published_parsed']) > previous_time:
+                    title = article['title']
+                    link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
+                    text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
+                    to_return.append((site_name, link, f"{title}\n\n{text}"))
+                    previous_time = time
+
+            return to_return, previous_time 
+
+        case error, [*articles]:
+
+            logger.warning(f"{site_name}: {repr(error)}")
+
+            for article in reversed(articles[:len(articles)//3]):
+                if (time := article['published_parsed']) > previous_time:
+                    title = article['title']
+                    link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
+                    text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
+                    to_return.append((site_name, link, f"{title}\n\n{text}"))
+                    previous_time = time
+
+            return to_return, previous_time 
+
+        case error, []:
+
+            logger.error(f"{site_name}: {repr(error)}")
             return to_return, previous_time
 
-        logger.warning(f"{site_name}: {error}")
-
-    articles = feed['entries']
-    for article in reversed(articles[:len(articles)//3]):
-        if (time := article['published_parsed']) > previous_time:
-            title = article['title']
-            link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
-            text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
-            to_return.append((site_name, link, f"{title}\n\n{text}"))
-            previous_time = time
-
-    return to_return, previous_time 
+        case _:
+            return to_return, previous_time
 
 
 def get_time_of_last_article(url: str) -> time.struct_time:
