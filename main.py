@@ -84,26 +84,21 @@ def make_request(url: str, site_name) -> list[dict] | list:
 
     match (feed.get("bozo_exception"), feed['entries'], feed["status"]):
 
-        case feedparser.CharacterEncodingOverride() | None, [*articles], 200:
+        case feedparser.CharacterEncodingOverride() | None, [*articles], 200 if articles:
 
             return articles
 
-        case error, [*articles], 200:
+        case _, [*articles], _ if articles:
 
-            logger.warning(f"{site_name}: {repr(error)}")
+            feed["entries"].clear()
+            logger.warning(f"{site_name}: {feed}")
 
             return articles 
 
-        case error, [], 200:
-
-            logger.error(f"{site_name}: {repr(error)}")
-            return []
-
-        case _, _, code:
-            logger.error(f"{feed['href']}: {code}")
-            return []
-
         case _:
+
+            feed["entries"].clear()
+            logger.error(f"{site_name}: {feed}")
             return []
 
 
