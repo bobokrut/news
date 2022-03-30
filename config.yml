@@ -31,7 +31,7 @@ sites:
   novayagazeta:
 
     description: Russian news
-    active: true
+    active: false
     urls:
       - url: "https://novayagazeta.ru/feed/rss"
 
