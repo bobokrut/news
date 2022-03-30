@@ -4,6 +4,7 @@ from os import environ
 import ast
 import sys
 
+
 from loguru import logger
 import loguru
 import yaml
@@ -38,7 +39,6 @@ logger.info(f"Logging level is set to {BG_BRIGHT_YELLOW}{LOGGING_LEVEL}{COLOR_RE
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
 logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
-
 HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
 CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
@@ -77,29 +77,41 @@ def send_mes(site_name: str, url: str, text: str) -> None:
         logger.exception("TELEGRAM ERROR: " + str(response))
 
 
-def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]], time.struct_time | None]:
-    # returns (site_name, url, text), time
-    to_return = []
-    feed = feedparser.parse(url, agent=HEADERS["user-agent"])
+def make_request(url: str, site_name) -> list[dict] | list:
+    
+    
+    feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
 
-    match (feed.get("bozo_exception"), feed['entries']):
+    match (feed.get("bozo_exception"), feed['entries'], feed["status"]):
 
-        case (feedparser.CharacterEncodingOverride() | None, [*articles]):
+        case feedparser.CharacterEncodingOverride() | None, [*articles], 200:
 
-            for article in reversed(articles[:len(articles)//3]):
-                if (time := article['published_parsed']) > previous_time:
-                    title = article['title']
-                    link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
-                    text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
-                    to_return.append((site_name, link, f"{title}\n\n{text}"))
-                    previous_time = time
+            return articles
 
-            return to_return, previous_time 
-
-        case error, [*articles]:
+        case error, [*articles], 200:
 
             logger.warning(f"{site_name}: {repr(error)}")
 
+            return articles 
+
+        case error, [], 200:
+
+            logger.error(f"{site_name}: {repr(error)}")
+            return []
+
+        case _, _, code:
+            logger.error(f"{feed['href']}: {code}")
+            return []
+
+        case _:
+            return []
+
+
+
+def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]] | list, time.struct_time]:
+    # returns (site_name, url, text), time
+    if articles := make_request(url, site_name):
+            to_return = []
             for article in reversed(articles[:len(articles)//3]):
                 if (time := article['published_parsed']) > previous_time:
                     title = article['title']
@@ -110,27 +122,21 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
 
             return to_return, previous_time 
 
-        case error, []:
-
-            logger.error(f"{site_name}: {repr(error)}")
-            return to_return, previous_time
-
-        case _:
-            return to_return, previous_time
+    return articles, previous_time
 
 
-def get_time_of_last_article(url: str) -> time.struct_time:
+def get_time_of_last_article(*, url: str, site_name: str) -> time.struct_time | None:
         
         index: int = 2 if DEBUG else 0
-        feed = feedparser.parse(url, agent=HEADERS["user-agent"])
-        p_time: time.struct_time = feed['entries'][index]["published_parsed"]
+        if articles := make_request(url, site_name):
+
+            p_time: time.struct_time = articles[index]["published_parsed"]
         
-        _url = url.removeprefix('https://')
-        _site = _url[:_url.find('/')]
-        _params = _url[_url.find("?"):] if _url.find("?") != -1 else ""
-        _url = _site + _params if _params else _site
-        logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{_url}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
-        return p_time
+            logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{site_name}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
+            return p_time
+
+        EXIT.set()
+        return None
 
 
 def load_urls() -> dict:
@@ -144,11 +150,11 @@ def load_urls() -> dict:
         if not sites[k]["active"]:
             del sites[k]
 
-    for site in sites.values():
+    for site_name, site in sites.items():
 
         for i in range(len(site["urls"])):
 
-            site["urls"][i]["time"] = get_time_of_last_article(site["urls"][i]["url"])
+            site["urls"][i]["time"] = get_time_of_last_article(url=site["urls"][i]["url"], site_name=site_name)
 
     return sites
 
