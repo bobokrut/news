@@ -3,7 +3,6 @@ services:
     app:
         container_name: ptz_news
         volumes:
-            - "/home/pi/news/logs:/usr/src/app/logs"
             - "/etc/localtime:/etc/localtime:ro"
         build: .
         restart: unless-stopped
@@ -11,6 +10,11 @@ services:
         env_file:
           - .env
         tty: true
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
 
 
 
