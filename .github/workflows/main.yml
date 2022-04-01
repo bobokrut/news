@@ -27,5 +27,5 @@ jobs:
       - name: Run a multi-line script
         run: |
           cd /home/pi/progs/news
-          git pull
+          git pull origin master
           docker compose up -d --build
