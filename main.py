@@ -7,6 +7,7 @@ import sys
 
 from loguru import logger
 import loguru
+import loguru
 import yaml
 import feedparser
 import requests
@@ -23,7 +24,7 @@ if not (TELEGRAM_TOKEN := environ.get("TOKEN")):
     print("TELEGRAM_TOKEN is not specified!")
     exit(1)
 
-if not (CHAT_ID := environ.get("CHAT_ID")):
+if not (CHAT_ID := environ.get("CHAT_ID", "")):
 
     print("CHAT_ID is not specified!")
     exit(1)
@@ -45,10 +46,10 @@ CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', 
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
 
-def formatter(record) -> str:
+def formatter(record: loguru.Record) -> str:
     if record["level"].no == 20:
         return "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>\n"
-    return loguru._defaults.LOGURU_FORMAT + "\n"
+    return loguru._defaults.LOGURU_FORMAT + "\n" #type: ignore
 
 logger.remove()
 logger.add(sys.stderr, format=formatter, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
@@ -77,18 +78,18 @@ def send_mes(site_name: str, url: str, text: str) -> None:
         logger.exception("TELEGRAM ERROR: " + str(response))
 
 
-def make_request(url: str, site_name) -> list[dict] | list:
+def make_request(url: str, site_name: str) -> list[dict] | list:
 
 
     feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
 
     match (feed.get("bozo_exception"), feed['entries'], feed["status"]):
 
-        case feedparser.CharacterEncodingOverride() | None, [*articles], 200 if articles:
+        case feedparser.CharacterEncodingOverride() | None, [*articles], 200 if articles:  # type: ignore
 
             return articles
 
-        case _, [*articles], _ if articles:
+        case _, [*articles], _ if articles: # type: ignore
 
             feed["entries"].clear()
             logger.warning(f"{site_name}: {feed}")
@@ -154,7 +155,7 @@ def load_urls() -> dict:
     return sites
 
 
-def main():
+def main() -> None:
 
     logger.info("Start....")
     logger.info("Loading urls....")
@@ -182,7 +183,7 @@ def main():
     logger.info("All done!")
 
 
-def quit(signo, _frame):
+def quit(signo, _frame): #type: ignore
     logger.info("Interrupted by %d, shutting down" % signo)
     EXIT.set()
 
