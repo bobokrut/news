@@ -51,7 +51,7 @@ def formatter(record) -> str:
     return loguru._defaults.LOGURU_FORMAT + "\n"
 
 logger.remove()
-logger.add(sys.stderr, format=formatter, level=LOGGING_LEVEL)
+logger.add(sys.stderr, format=formatter, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -60,7 +60,7 @@ def print_message(site_name: str, url: str, text: str) -> None:
 
 
 def send_mes(site_name: str, url: str, text: str) -> None:
-    
+
     params: dict[str, str | int] = {}
     params["chat_id"] = CHAT_ID
     params["parse_mode"] = "MarkdownV2"
@@ -78,8 +78,8 @@ def send_mes(site_name: str, url: str, text: str) -> None:
 
 
 def make_request(url: str, site_name) -> list[dict] | list:
-    
-    
+
+
     feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
 
     match (feed.get("bozo_exception"), feed['entries'], feed["status"]):
@@ -93,7 +93,7 @@ def make_request(url: str, site_name) -> list[dict] | list:
             feed["entries"].clear()
             logger.warning(f"{site_name}: {feed}")
 
-            return articles 
+            return articles
 
         case _:
 
@@ -115,18 +115,18 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
                     to_return.append((site_name, link, f"{title}\n\n{text}"))
                     previous_time = time
 
-            return to_return, previous_time 
+            return to_return, previous_time
 
     return articles, previous_time
 
 
 def get_time_of_last_article(*, url: str, site_name: str) -> time.struct_time | None:
-        
+
         index: int = 2 if DEBUG else 0
         if articles := make_request(url, site_name):
 
             p_time: time.struct_time = articles[index]["published_parsed"]
-        
+
             logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{site_name}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
             return p_time
 
