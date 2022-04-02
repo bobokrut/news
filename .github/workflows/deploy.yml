@@ -21,15 +21,14 @@ jobs:
 
       - name: installing packages
         run: |
-          pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install -e . --no-use-pep517
-
+          pip install --upgrade pip poetry==1.1.13
+          poetry install
+          
       - name: running mypy
-        run: mypy *.py
+        run: poetry run mypy *.py
 
       - name: running pytest
-        run: pytest
+        run: poetry run pytest
 
   build:
 
