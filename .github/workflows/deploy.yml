@@ -19,10 +19,15 @@ jobs:
         with:
           python-version: '3.10.4' 
 
+      - name: installing poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: '3.10.4'
+
       - name: installing packages
         run: |
-          pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          poetry install
+          poetry shell
 
       - name: running mypy
         run: mypy *.py
