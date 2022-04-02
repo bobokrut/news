@@ -22,7 +22,7 @@ jobs:
       - name: installing packages
         run: |
           pip install --upgrade pip
-          pip install mypy==v0.942 types-pyyaml==6.0.5 types-requests==2.27.16 pytest==6.2.5
+          pip install -r requirements-dev.txt
 
       - name: running mypy
         run: mypy *.py
