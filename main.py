@@ -7,8 +7,6 @@ import sys
 
 
 from loguru import logger
-import loguru
-import loguru
 import yaml
 import feedparser
 import requests
@@ -101,7 +99,8 @@ def make_request(url: str, site_name: str) -> list[dict] | list:
 
 
 def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]] | list, time.struct_time]:
-    # returns (site_name, url, text), time
+    '''returns (site_name, url, text), time'''
+
     if articles := make_request(url, site_name):
             to_return = []
             for article in reversed(articles[:len(articles)//3]):
