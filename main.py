@@ -47,13 +47,8 @@ CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', 
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
 
-def formatter(record: loguru.Record) -> str:
-    if record["level"].no == 20:
-        return "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>\n"
-    return loguru._defaults.LOGURU_FORMAT + "\n" #type: ignore
-
 logger.remove()
-logger.add(sys.stderr, format=formatter, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
+logger.add(sys.stderr, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
