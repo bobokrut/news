@@ -77,13 +77,18 @@ def make_request(url: str, site_name: str) -> list[dict] | list:
 
     feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
 
-    match (feed.get("bozo_exception"), feed['entries'], feed["status"]):
+    match (feed.get("bozo_exception"), feed['entries']):
 
-        case feedparser.CharacterEncodingOverride() | None, [*articles], 200 if articles:  # type: ignore
+        case feedparser.CharacterEncodingOverride() | None, [*articles] if articles:  # type: ignore
+            
+            if feed["status"] != 200:
+
+                feed["entries"].clear()
+                logger.warning(f"{site_name}: {feed}")
 
             return articles
 
-        case _, [*articles], _ if articles: # type: ignore
+        case _, [*articles] if articles: # type: ignore
 
             feed["entries"].clear()
             logger.warning(f"{site_name}: {feed}")
