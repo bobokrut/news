@@ -69,9 +69,6 @@ jobs:
       - name: sleep for 5 sec.
         run: sleep 5
 
-      - name: getting logs from container
-        id: logs
-        run: echo "::set-output name=logs::$(docker logs ptz_news)"
+      - name: printing logs from container
+        run: docker logs ptz_news
 
-      - name: printing logs
-        run: echo "${{ steps.logs.outputs.logs }}"
