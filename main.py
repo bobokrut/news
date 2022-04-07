@@ -1,9 +1,9 @@
-from __future__ import annotations
 from threading import Event
 import time
 from os import environ
 import ast
 import sys
+from types import SimpleNamespace
 
 
 from loguru import logger
@@ -72,7 +72,7 @@ def send_mes(site_name: str, url: str, text: str) -> None:
         logger.exception("TELEGRAM ERROR: " + str(response))
 
 
-def make_request(url: str, site_name: str) -> list[dict] | list:
+def make_request(url: str, url_desc: str) -> list[dict] | list:
 
 
     feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
@@ -84,36 +84,36 @@ def make_request(url: str, site_name: str) -> list[dict] | list:
             if feed["status"] != 200:
 
                 feed["entries"].clear()
-                logger.warning(f"{site_name}: {feed}")
+                logger.warning(f"{url_desc}: {feed}")
 
             return articles
 
         case _, [*articles] if articles: # type: ignore
 
             feed["entries"].clear()
-            logger.warning(f"{site_name}: {feed}")
+            logger.warning(f"{url_desc}: {feed}")
 
             return articles
 
         case _:
 
             feed["entries"].clear()
-            logger.error(f"{site_name}: {feed}")
+            logger.error(f"{url_desc}: {feed}")
             return []
 
 
 
-def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str, str]] | list, time.struct_time]:
+def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
     '''returns (site_name, url, text), time'''
 
-    if articles := make_request(url, site_name):
+    if articles := make_request(url, url_desc):
             to_return = []
             for article in reversed(articles[:len(articles)//3]):
                 if (time := article['published_parsed']) > previous_time:
                     title = article['title']
-                    link = article['link'].split('?')[0] if site_name == 'yle' else article['link']
-                    text = article['summary'].split('<p>')[3] if site_name == "meduza" else article['summary']
-                    to_return.append((site_name, link, f"{title}\n\n{text}"))
+                    link = article['link'].split('?')[0] if url_desc.startswith('yle') else article['link']
+                    text = article['summary'].split('<p>')[3] if url_desc.startswith("meduza") else article['summary']
+                    to_return.append((link, f"{title}\n\n{text}"))
                     previous_time = time
 
             return to_return, previous_time
@@ -121,21 +121,23 @@ def parse(site_name: str, url: str, previous_time: time.struct_time) -> tuple[li
     return articles, previous_time
 
 
-def get_time_of_last_article(*, url: str, site_name: str) -> time.struct_time | None:
+def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | None:
 
         index: int = 2 if DEBUG else 0
-        if articles := make_request(url, site_name):
+        if articles := make_request(url, url_desc):
 
             p_time: time.struct_time = articles[index]["published_parsed"]
 
-            logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{site_name}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
+            logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{url_desc}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
             return p_time
 
         EXIT.set()
         return None
 
 
-def load_urls() -> dict:
+def load_urls() -> tuple[SimpleNamespace, ...]:
+
+    news_items: list[SimpleNamespace] = []
 
     with open (CONFIG_FILE, "r") as f:
 
@@ -145,14 +147,21 @@ def load_urls() -> dict:
 
         if not sites[k]["active"]:
             del sites[k]
+        else:
+            del sites[k]["description"]
 
-    for site_name, site in sites.items():
+    for sitename, urls in sites.items():
+        
+        for url in urls["urls"]:
 
-        for i in range(len(site["urls"])):
+            if not (status := url.get("active", True)) and not status:
 
-            site["urls"][i]["time"] = get_time_of_last_article(url=site["urls"][i]["url"], site_name=site_name)
+                continue
 
-    return sites
+            time = get_time_of_last_article(url=url['url'], url_desc=url["name"])
+            news_items.append(SimpleNamespace(sitename=sitename, url=url["url"], url_desc=url["name"], time=time))
+
+    return tuple(news_items)
 
 
 def main() -> None:
@@ -164,17 +173,16 @@ def main() -> None:
     logger.info("Starting main loop....")
     while not EXIT.is_set():
         try:
-            for site_name, site_data in sites.items():
-                for d_url in site_data["urls"]:
-                    new, time = parse(site_name, d_url["url"], d_url["time"])
-                    if new:
-                        for article in new:
-                            site, url, text = article
-                            if DEBUG:
-                                print_message(url=url, site_name=site_name, text=text)
-                            else:
-                                send_mes(url=url, site_name=site, text=text)
-                        d_url["time"] = time
+            for site in sites:
+                new, time = parse(site.url_desc, site.url, site.time)
+                if new:
+                    for article in new:
+                        url, text = article
+                        if DEBUG:
+                            print_message(url=url, site_name=site.sitename, text=text)
+                        else:
+                            send_mes(url=url, site_name=site.sitename, text=text)
+                    site.time = time
 
         except Exception as e:
             logger.exception(e)

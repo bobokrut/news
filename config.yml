@@ -4,39 +4,47 @@ sites:
     description: Finnish news site
     active: true
     urls:
-      - url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
-      - url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
+      - name: yle_en
+        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
+        active: false
+      - name: yle_rus
+        url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
 
   dtpptz:
     description: Road incidents in Petrozavodsk
     active: false
     urls:
-      - url: "https://dtpptz.ru/"
+      - name: dtp_ptz
+        url: "https://dtpptz.ru/"
 
   stolicaonego:
     description: Local news from Petrozavodsk
     active: false
     urls:
-      - url: "https://stolicaonego.ru/news/society/"
-      - url: "https://stolicaonego.ru/news/incident/"
-      - url: "https://stolicaonego.ru/news/personal/"
+      - name: stolica_onego_society
+        url: "https://stolicaonego.ru/news/society/"
+      - name: stolica_onego_incident
+        url: "https://stolicaonego.ru/news/incident/"
+      - name: stolica_onego_personal
+        url: "https://stolicaonego.ru/news/personal/"
 
   meduza:
-
     description: Russian news
     active: true
     urls:
-      - url: "https://meduza.io/rss/news"
+      - name: meduza
+        url: "https://meduza.io/rss/news"
   
   novayagazeta:
-
     description: Russian news
     active: false
     urls:
-      - url: "https://novayagazeta.ru/feed/rss"
+      - name: novayagazeta_rus
+        url: "https://novayagazeta.ru/feed/rss"
 
   radiot:
     description: Tech news from radio-t
     active: true
     urls:
-      - url: "https://news.radio-t.com/rss"
+      - name: radio-t
+        url: "https://news.radio-t.com/rss"
