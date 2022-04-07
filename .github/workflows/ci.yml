@@ -71,4 +71,4 @@ jobs:
         run : docker logs --tail 10 ptz_news
 
       - name: printing logs
-        run: echo ${{ steps.docker_logs.outputs.stdout }}
+        run: echo ::set-output ${{ steps.docker_logs.outputs.stdout }}
