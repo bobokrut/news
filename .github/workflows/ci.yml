@@ -65,3 +65,4 @@ jobs:
           cd /home/pi/progs/news
           git pull origin master
           docker compose up -d --build
+          docker logs -f --until=10s ptz_news
