@@ -6,7 +6,6 @@ sites:
     urls:
       - name: yle_en
         url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
-        active: false
       - name: yle_rus
         url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
 
