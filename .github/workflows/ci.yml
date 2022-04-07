@@ -61,14 +61,12 @@ jobs:
     steps:
 
       - name: deploying from master 
+        id: docker
         run: |
           cd /home/pi/progs/news
           git pull origin master
           docker compose up -d --build
-
-      - name: getting docker logs
-        id: docker_logs
-        run : docker logs --tail 10 ptz_news
+          echo ::set-output name=logs::$(docker logs --tail 10 ptz_news)
 
       - name: printing logs
-        run: echo ::set-output ${{ steps.docker_logs.outputs.stdout }}
+        run: echo ${{ steps.docker_logs.outputs.logs }}
