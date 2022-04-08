@@ -101,6 +101,18 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             logger.error(f"{url_desc}: {feed}")
             return []
 
+def parse_text(text: str, url_desc: str) -> str:
+
+    match text, url_desc.split("_")[0]:
+
+        case text, _ if len (text) < 3 or not text:
+            return ""
+        case _, "meduza":
+            return text.split('<p>')[3]
+        case _:
+            return text
+
+
 
 
 def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
@@ -112,7 +124,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
                 if (time := article['published_parsed']) > previous_time:
                     title = article['title']
                     link = article['link'].split('?')[0] if url_desc.startswith('yle') else article['link']
-                    text = article['summary'].split('<p>')[3] if url_desc.startswith("meduza") else article['summary']
+                    text = parse_text(article["summary"], url_desc)
                     to_return.append((link, f"{title}\n\n{text}"))
                     previous_time = time
 
