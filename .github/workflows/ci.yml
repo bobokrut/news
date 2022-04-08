@@ -20,7 +20,7 @@ jobs:
           python3 -m pipx ensurepath
 
       - name: Installing poetry
-        run: pipx install pipenv
+        run: pipx install poetry
 
       - uses: actions/setup-python@v3
         with:
