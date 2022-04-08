@@ -45,7 +45,9 @@ EXIT = Event()
 
 def print_message(site_name: str, url: str, text: str) -> None:
 
-    logger.debug(f"\n\t{site_name=}\n\t{url=}\n\t{text=}")
+    logger.debug(f"\n\t{site_name=}  \
+                   \n\t{url=}        \
+                   \n\t{text=}")
 
 
 def send_mes(site_name: str, url: str, text: str) -> None:
@@ -212,5 +214,6 @@ if __name__ == "__main__":
     logger.add(sys.stderr, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
     logger.info(f"Debug is set to {BG_BRIGHT_YELLOW}{DEBUG}{COLOR_RESET}")
     logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
+
     main()
 
