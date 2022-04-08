@@ -34,19 +34,13 @@ FG_BRIGHT_YELLOW = "\u001b[33;1m"
 
 DEBUG = (environ.get("DEBUG", False) == 'True')
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
-logger.info(f"Debug is set to {BG_BRIGHT_YELLOW}{DEBUG}{COLOR_RESET}")
-logger.info(f"Logging level is set to {BG_BRIGHT_YELLOW}{LOGGING_LEVEL}{COLOR_RESET}")
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
-logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
 HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
 CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
-
-logger.remove()
-logger.add(sys.stderr, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -215,5 +209,10 @@ if __name__ == "__main__":
     for sig in ("TERM", "HUP", "INT"):
         signal.signal(getattr(signal, "SIG" + sig), quit)
 
+    logger.info(f"Logging level is set to {BG_BRIGHT_YELLOW}{LOGGING_LEVEL}{COLOR_RESET}")
+    logger.remove()
+    logger.add(sys.stderr, level=LOGGING_LEVEL, backtrace=True, diagnose=True)
+    logger.info(f"Debug is set to {BG_BRIGHT_YELLOW}{DEBUG}{COLOR_RESET}")
+    logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
     main()
 
