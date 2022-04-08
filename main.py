@@ -13,6 +13,7 @@ import requests
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -32,22 +33,27 @@ BG_BRIGHT_YELLOW = "\u001b[33;1m\u001b[7m"
 COLOR_RESET = "\u001b[0m"
 FG_BRIGHT_YELLOW = "\u001b[33;1m"
 
-DEBUG = (environ.get("DEBUG", False) == 'True')
+DEBUG = environ.get("DEBUG", False) == "True"
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
 HEADERS = ast.literal_eval(environ.get("HEADERS", '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}'))
 
-CHAR_TO_ESCAPE: dict[int, str] = {i: "\\" + chr(i) for i in bytes("".join(('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!')).encode("utf8"))}
+CHAR_TO_ESCAPE: dict[int, str] = {
+    i: "\\" + chr(i)
+    for i in bytes("".join(("_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!")).encode("utf8"))
+}
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
 
-    logger.debug(f"\n\t{site_name=}  \
+    logger.debug(
+        f"\n\t{site_name=}  \
                    \n\t{url=}        \
-                   \n\t{text=}")
+                   \n\t{text=}"
+    )
 
 
 def send_mes(site_name: str, url: str, text: str) -> None:
@@ -70,13 +76,12 @@ def send_mes(site_name: str, url: str, text: str) -> None:
 
 def make_request(url: str, url_desc: str) -> list[dict] | list:
 
-
     feed: dict = feedparser.parse(url, agent=HEADERS["user-agent"])
 
-    match (feed.get("bozo_exception"), feed['entries']):
+    match (feed.get("bozo_exception"), feed["entries"]):
 
         case feedparser.CharacterEncodingOverride() | None, [*articles] if articles:  # type: ignore
-            
+
             if feed["status"] != 200:
 
                 feed["entries"].clear()
@@ -84,7 +89,7 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
 
             return articles
 
-        case _, [*articles] if articles: # type: ignore
+        case _, [*articles] if articles:  # type: ignore
 
             feed["entries"].clear()
             logger.warning(f"{url_desc}: {feed}")
@@ -97,55 +102,56 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             logger.error(f"{url_desc}: {feed}")
             return []
 
-def parse_text(text: str, url_desc: str) -> str: #type: ignore
+
+def parse_text(text: str, url_desc: str) -> str:  # type: ignore
 
     match text, url_desc.split("_")[0]:
 
-        case text, _ if len (text) < 3 or not text:
+        case text, _ if len(text) < 3 or not text:
             return ""
         case _, "meduza":
-            return text.split('<p>')[3]
+            return text.split("<p>")[3]
         case _:
             return text
 
 
 def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
-    '''returns (site_name, url, text), time'''
+    """returns (site_name, url, text), time"""
 
     if articles := make_request(url, url_desc):
-            to_return = []
-            for article in reversed(articles[:len(articles)//3]):
-                if (time := article['published_parsed']) > previous_time:
-                    title = article['title']
-                    link = article['link'].split('?')[0] if url_desc.startswith('yle') else article['link']
-                    text = parse_text(article["summary"], url_desc)
-                    to_return.append((link, f"{title}\n\n{text}"))
-                    previous_time = time
+        to_return = []
+        for article in reversed(articles[: len(articles) // 3]):
+            if (time := article["published_parsed"]) > previous_time:
+                title = article["title"]
+                link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
+                text = parse_text(article["summary"], url_desc)
+                to_return.append((link, f"{title}\n\n{text}"))
+                previous_time = time
 
-            return to_return, previous_time
+        return to_return, previous_time
 
     return articles, previous_time
 
 
 def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | None:
 
-        index: int = 2 if DEBUG else 0
-        if articles := make_request(url, url_desc):
+    index: int = 2 if DEBUG else 0
+    if articles := make_request(url, url_desc):
 
-            p_time: time.struct_time = articles[index]["published_parsed"]
+        p_time: time.struct_time = articles[index]["published_parsed"]
 
-            logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{url_desc}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
-            return p_time
+        logger.info(f"Starting time for {FG_BRIGHT_YELLOW}{url_desc}{COLOR_RESET} is {time.strftime('%m-%dT%H:%MZ', p_time)}")
+        return p_time
 
-        EXIT.set()
-        return None
+    EXIT.set()
+    return None
 
 
 def load_urls() -> tuple[SimpleNamespace, ...]:
 
     news_items: list[SimpleNamespace] = []
 
-    with open (CONFIG_FILE, "r") as f:
+    with open(CONFIG_FILE, "r") as f:
 
         sites: dict[str, dict] = yaml.safe_load(f)["sites"]
 
@@ -157,14 +163,14 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
             del sites[k]["description"]
 
     for sitename, urls in sites.items():
-        
+
         for url in urls["urls"]:
 
             if not (status := url.get("active", True)) and not status:
 
                 continue
 
-            time = get_time_of_last_article(url=url['url'], url_desc=url["name"])
+            time = get_time_of_last_article(url=url["url"], url_desc=url["name"])
             news_items.append(SimpleNamespace(sitename=sitename, url=url["url"], url_desc=url["name"], time=time))
 
     return tuple(news_items)
@@ -197,7 +203,7 @@ def main() -> None:
     logger.info("All done!")
 
 
-def quit(signo, _frame): #type: ignore
+def quit(signo, _frame):  # type: ignore
     logger.info("Interrupted by %d, shutting down" % signo)
     EXIT.set()
 
@@ -216,4 +222,3 @@ if __name__ == "__main__":
     logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
 
     main()
-
