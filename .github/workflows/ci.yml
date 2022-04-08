@@ -13,40 +13,24 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
+
+      - name: Installing poetry
+        run: pipx install pipenv
+
       - uses: actions/setup-python@v3
         with:
           python-version: '3.10.4' 
-
-      - name: Get full python version
-        id: full-python-version
-        run: |
-          echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
-
-      - name: Installing poetry
-        run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-
-      - name: poetry config
-        run: |
-          source $HOME/.poetry/env
-          poetry config virtualenvs.in-project true
-
-      - name: Set up cache
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+          cache: 'poetry'
 
       - name: Install dependencies
-        run: |
-          poetry install
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install
           
       - name: mypy
         run: poetry run mypy *.py
 
       - name: black
         run: poetry run black --check .
+
 
       - name: pytest
         run: poetry run pytest
