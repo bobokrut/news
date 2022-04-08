@@ -40,18 +40,16 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install
-          source $HOME/.poetry/env
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
           
-      - name: running mypy
-        run: |
-          source $HOME/.poetry/env
-          poetry run mypy *.py
+      - name: mypy
+        run: poetry run mypy *.py
 
-      - name: running pytest
-        run: |
-          source $HOME/.poetry/env
-          poetry run pytest
+      - name: black
+        run: poetry run black --check .
+
+      - name: pytest
+        run: poetry run pytest
 
   build:
 
