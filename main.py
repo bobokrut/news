@@ -95,7 +95,7 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             logger.error(f"{url_desc}: {feed}")
             return []
 
-def parse_text(text: str, url_desc: str) -> str:
+def parse_text(text: str, url_desc: str) -> str: #type: ignore
 
     match text, url_desc.split("_")[0]:
 
@@ -105,8 +105,6 @@ def parse_text(text: str, url_desc: str) -> str:
             return text.split('<p>')[3]
         case _:
             return text
-
-
 
 
 def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
