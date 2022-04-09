@@ -14,8 +14,8 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Installing poetry
+        run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
       - uses: actions/setup-python@v3
         with:
@@ -23,17 +23,25 @@ jobs:
           cache: 'poetry'
 
       - name: Install dependencies
-        run: poetry install
+        run: |
+          source $HOME/.poetry/env
+          poetry install
           
       - name: mypy
-        run: poetry run mypy *.py
+        run: |
+          source $HOME/.poetry/env
+          poetry run mypy *.py
 
       - name: black
-        run: poetry run black --check .
+        run: |
+          source $HOME/.poetry/env
+          poetry run black --check .
 
 
       - name: pytest
-        run: poetry run pytest
+        run: |
+          source $HOME/.poetry/env
+          poetry run pytest
 
   build:
 
