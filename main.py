@@ -62,7 +62,7 @@ def send_mes(site_name: str, url: str, text: str) -> None:
     params["chat_id"] = CHAT_ID
     params["parse_mode"] = "MarkdownV2"
     params["disable_web_page_preview"] = True
-    params["disable_notification"] = True
+    params["disable_notification"] = False
 
     text = text.translate(CHAR_TO_ESCAPE)
     params["text"] = f"[{site_name}]({url}): {text}"
