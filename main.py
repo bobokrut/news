@@ -110,7 +110,7 @@ def parse_text(text: str, url_desc: str) -> str:  # type: ignore
         case text, _ if len(text) < 3 or not text:
             return ""
         case _, "meduza":
-            return text.split("<p>")[3]
+            return t if len(t := text.split("<p>")[3]) > 3 else ""
         case _:
             return text
 
