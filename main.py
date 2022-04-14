@@ -119,6 +119,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
     """returns (site_name, url, text), time"""
 
     if articles := make_request(url, url_desc):
+        logger.success(url_desc)
         to_return = []
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
@@ -130,6 +131,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
 
         return to_return, previous_time
 
+    logger.warning(url_desc)
     return articles, previous_time
 
 
