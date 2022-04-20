@@ -36,9 +36,13 @@ sites:
   
   novayagazeta:
     description: Russian news
-    active: false
+    active: true
     urls:
       - name: novayagazeta_rus
+        active: false
+        url: "https://novayagazeta.ru/feed/rss"
+      - name: novayagazeta_europe
+        active: true
         url: "https://novayagazeta.ru/feed/rss"
 
   radiot:
