@@ -131,7 +131,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
                 title = t if (t := article["title"]).find("<p>") == -1 else remove_p_from_text(t)
                 link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
                 text = parse_text(article["summary"], url_desc)
-                to_return.append((link, f"{title}\n\n{text}"))
+                to_return.append((link, f"*{title}*\n\n{text}"))
                 previous_time = time
 
         return to_return, previous_time
