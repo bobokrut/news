@@ -1,3 +1,4 @@
+import re
 from threading import Event
 import time
 from os import environ
@@ -102,6 +103,8 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             logger.error(f"{url_desc}: {feed}")
             return []
 
+def remove_p_from_text(text: str):
+    return re.sub(r"</?p>", "", text)
 
 def parse_text(text: str, url_desc: str) -> str:  # type: ignore
 
@@ -123,7 +126,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
         to_return = []
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
-                title = article["title"]
+                title = t if (t := article["title"]).find('<p>') == -1 else remove_p_from_text(t)
                 link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
                 text = parse_text(article["summary"], url_desc)
                 to_return.append((link, f"{title}\n\n{text}"))
