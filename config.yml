@@ -8,6 +8,8 @@ sites:
         url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
       - name: yle_rus
         url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
+      - name: yle_vaasa
+        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-198356"
 
   dtpptz:
     description: Road incidents in Petrozavodsk
