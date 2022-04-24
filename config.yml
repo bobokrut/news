@@ -43,7 +43,7 @@ sites:
         url: "https://novayagazeta.ru/feed/rss"
       - name: novayagazeta_europe
         active: true
-        url: "https://novayagazeta.ru/feed/rss"
+        url: "https://novayagazeta.eu/feed/rss"
 
   radiot:
     description: Tech news from radio-t
