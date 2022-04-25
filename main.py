@@ -5,14 +5,13 @@ from os import environ
 import ast
 import sys
 from types import SimpleNamespace
-from deepl import translator
+from deepl import Translator
 
 
 from loguru import logger
 import yaml
 import feedparser
 import requests
-import deepl
 
 try:
     from dotenv import load_dotenv
@@ -54,7 +53,7 @@ CHAR_TO_ESCAPE: dict[int, str] = {
 }
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
-TRANSLATOR = deepl.Translator(DEEPL_TOKEN)
+TRANSLATOR = Translator(DEEPL_TOKEN)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -73,8 +72,6 @@ def send_mes(site_name: str, url: str, text: str) -> None:
     params["parse_mode"] = "MarkdownV2"
     params["disable_web_page_preview"] = True
     params["disable_notification"] = False
-
-    text = text.translate(CHAR_TO_ESCAPE)
     params["text"] = f"[{site_name}]({url}): {text}"
     logger.debug(params)
 
@@ -124,10 +121,16 @@ def parse_text(text: str, url_desc: str) -> str:  # type: ignore
         case text, _ if len(text) < 3 or not text:
             return ""
         case text, "meduza":
-            return t if len(t := text.split("<p>")[3]) > 3 else ""
+            return t.translate(CHAR_TO_ESCAPE) if len(t := text.split("<p>")[3]) > 3 else ""
         case _:
-            return text
+            return text.translate(CHAR_TO_ESCAPE)
 
+def parse_title(title: str, url_desc: str) -> str:
+    match url_desc:
+        case "novayagazeta_europe":
+            return remove_p_from_text(title).removesuffix("&nbsp;").translate(CHAR_TO_ESCAPE)
+        case _:
+            return title.translate(CHAR_TO_ESCAPE)
 
 def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
     """returns (site_name, url, text), time"""
@@ -137,7 +140,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
         to_return = []
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
-                title = t if (t := article["title"]).find("<p>") == -1 else remove_p_from_text(t)
+                title = parse_title(article["title"], url_desc)
                 link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
                 text = parse_text(article["summary"], url_desc)
                 to_return.append((link, f"*{title}*\n\n{text}"))
@@ -213,8 +216,8 @@ def main() -> None:
                 if new:
                     for article in new:
                         url, text = article
-                        text = translate_text(text, site.translate["from"], site.translate["to"]) if site.translate else text
                         if DEBUG:
+                            text = translate_text(text, site.translate["from"], site.translate["to"]) if site.translate else text
                             print_message(url=url, site_name=site.sitename, text=text)
                         else:
                             send_mes(url=url, site_name=site.sitename, text=text)
