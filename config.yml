@@ -9,7 +9,7 @@ sites:
       - name: yle_rus
         url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
       - name: yle_vaasa
-        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-198356"
+        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-148149"
         translate:
           from: "fi"
           to: "en-us"
