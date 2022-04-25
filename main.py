@@ -145,7 +145,7 @@ def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[lis
                 title = parse_title(article["title"], url_desc)
                 link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
                 text = parse_text(article["summary"], url_desc)
-                to_return.append(SimpleNamespace(link=link, title=title, text=text))
+                to_return.append(SimpleNamespace(url=link, title=title, text=text))
                 previous_time = time
 
         return to_return, previous_time
