@@ -46,7 +46,7 @@ sites:
       - name: novayagazeta_rus
         active: false
         url: "https://novayagazeta.ru/feed/rss"
-      - name: novayagazeta_europe
+      - name: novayagazeta_eu
         active: true
         url: "https://novayagazeta.eu/feed/rss"
 
