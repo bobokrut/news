@@ -125,12 +125,14 @@ def parse_text(text: str, url_desc: str) -> str:  # type: ignore
         case _:
             return text.translate(CHAR_TO_ESCAPE)
 
+
 def parse_title(title: str, url_desc: str) -> str:
     match url_desc:
         case "novayagazeta_europe":
             return remove_p_from_text(title).removesuffix("&nbsp;").translate(CHAR_TO_ESCAPE)
         case _:
             return title.translate(CHAR_TO_ESCAPE)
+
 
 def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
     """returns (site_name, url, text), time"""
