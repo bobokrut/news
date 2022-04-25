@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "news"
-version = "v1.9.2"
+version = "v2.0.0"
 description = ""
 authors = ["bobokrut <egor-evlampiev@mail.ru>"]
 

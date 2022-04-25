@@ -5,12 +5,14 @@ from os import environ
 import ast
 import sys
 from types import SimpleNamespace
+from deepl import translator
 
 
 from loguru import logger
 import yaml
 import feedparser
 import requests
+import deepl
 
 try:
     from dotenv import load_dotenv
@@ -30,6 +32,12 @@ if not (CHAT_ID := environ.get("CHAT_ID", "")):
     print("CHAT_ID is not specified!")
     exit(1)
 
+if not (DEEPL_TOKEN := environ.get("DEEPL_TOKEN", "")):
+
+    print("DEEPL_TOKEN is not specified!")
+    exit(1)
+
+
 BG_BRIGHT_YELLOW = "\u001b[33;1m\u001b[7m"
 COLOR_RESET = "\u001b[0m"
 FG_BRIGHT_YELLOW = "\u001b[33;1m"
@@ -46,6 +54,7 @@ CHAR_TO_ESCAPE: dict[int, str] = {
 }
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
+TRANSLATOR = deepl.Translator(DEEPL_TOKEN)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -154,6 +163,11 @@ def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | N
     return None
 
 
+def translate_text(text: str, from_lang: str, to_lang: str) -> str:
+
+    return TRANSLATOR.translate_text(text, source_lang=from_lang, target_lang=to_lang).text  # type: ignore
+
+
 def load_urls() -> tuple[SimpleNamespace, ...]:
 
     news_items: list[SimpleNamespace] = []
@@ -161,6 +175,7 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
     with open(CONFIG_FILE, "r") as f:
 
         sites: dict[str, dict] = yaml.safe_load(f)["sites"]
+    logger.debug(sites)
 
     for k in sites.copy().keys():
 
@@ -178,8 +193,9 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
                 continue
 
             time = get_time_of_last_article(url=url["url"], url_desc=url["name"])
-            news_items.append(SimpleNamespace(sitename=sitename, url=url["url"], url_desc=url["name"], time=time))
+            news_items.append(SimpleNamespace(sitename=sitename, url=url["url"], url_desc=url["name"], time=time, translate=url.get("translate")))
 
+    logger.debug(news_items)
     return tuple(news_items)
 
 
@@ -197,6 +213,7 @@ def main() -> None:
                 if new:
                     for article in new:
                         url, text = article
+                        text = translate_text(text, site.translate["from"], site.translate["to"]) if site.translate else text
                         if DEBUG:
                             print_message(url=url, site_name=site.sitename, text=text)
                         else:
