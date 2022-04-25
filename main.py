@@ -72,7 +72,7 @@ def send_mes(text: str) -> None:
     params["parse_mode"] = "MarkdownV2"
     params["disable_web_page_preview"] = True
     params["disable_notification"] = False
-    params["text"] = text 
+    params["text"] = text
     logger.debug(params)
 
     response = requests.post(TELEGRAM_LINK, params=params).json()
@@ -172,7 +172,8 @@ def translate_text(text: str, from_lang: str, to_lang: str) -> str:
 
     return TRANSLATOR.translate_text(text, source_lang=from_lang, target_lang=to_lang).text  # type: ignore
 
-def check_translator_usage():
+
+def check_translator_usage() -> None:
     usage = TRANSLATOR.get_usage()
 
     if usage.character.limit is None or usage.character.count is None:
@@ -180,13 +181,15 @@ def check_translator_usage():
         return
 
     ch_remaining = usage.character.limit - usage.character.count
-    if (ch_remaining) < 5000:  
+    if (ch_remaining) < 5000:
         text = f"🔴WARNING: {ch_remaining} are left for traslation!"
         send_mes(text)
     return
 
+
 def format_news(site_name: str, article: SimpleNamespace) -> str:
     return f"[{site_name}]({article.url}): *{article.title}*\n\n{article.text}"
+
 
 def load_urls() -> tuple[SimpleNamespace, ...]:
 
@@ -219,7 +222,6 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
     return tuple(news_items)
 
 
-
 def main() -> None:
 
     logger.info("Start....")
@@ -236,7 +238,9 @@ def main() -> None:
                         if DEBUG:
                             print_message(url=article.url, site_name=site.sitename, text=article.text)
                         else:
-                            article.text = translate_text(article.text, site.translate["from"], site.translate["to"]) if site.translate else article.text
+                            article.text = (
+                                translate_text(article.text, site.translate["from"], site.translate["to"]) if site.translate else article.text
+                            )
                             text = format_news(site.sitename, article)
                             send_mes(text)
                     site.time = time
