@@ -65,14 +65,14 @@ def print_message(site_name: str, url: str, text: str) -> None:
     )
 
 
-def send_mes(site_name: str, url: str, text: str) -> None:
+def send_mes(text: str) -> None:
 
     params: dict[str, str | int] = {}
     params["chat_id"] = CHAT_ID
     params["parse_mode"] = "MarkdownV2"
     params["disable_web_page_preview"] = True
     params["disable_notification"] = False
-    params["text"] = f"[{site_name}]({url}): {text}"
+    params["text"] = text 
     logger.debug(params)
 
     response = requests.post(TELEGRAM_LINK, params=params).json()
@@ -134,18 +134,18 @@ def parse_title(title: str, url_desc: str) -> str:
             return title.translate(CHAR_TO_ESCAPE)
 
 
-def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[tuple[str, str]] | list, time.struct_time]:
-    """returns (site_name, url, text), time"""
+def parse(url_desc: str, url: str, previous_time: time.struct_time) -> tuple[list[SimpleNamespace] | list, time.struct_time]:
+    """returns SimpleNamespace(link, title, text), time"""
 
     if articles := make_request(url, url_desc):
         logger.success(url_desc)
-        to_return = []
+        to_return: list[SimpleNamespace] = []
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
                 title = parse_title(article["title"], url_desc)
                 link = article["link"].split("?")[0] if url_desc.startswith("yle") else article["link"]
                 text = parse_text(article["summary"], url_desc)
-                to_return.append((link, f"*{title}*\n\n{text}"))
+                to_return.append(SimpleNamespace(link=link, title=title, text=text))
                 previous_time = time
 
         return to_return, previous_time
@@ -172,6 +172,21 @@ def translate_text(text: str, from_lang: str, to_lang: str) -> str:
 
     return TRANSLATOR.translate_text(text, source_lang=from_lang, target_lang=to_lang).text  # type: ignore
 
+def check_translator_usage():
+    usage = TRANSLATOR.get_usage()
+
+    if usage.character.limit is None or usage.character.count is None:
+        logger.warning(f"Failed to count remaining characters for translation: {usage.character.limit=}, {usage.character.count}")
+        return
+
+    ch_remaining = usage.character.limit - usage.character.count
+    if (ch_remaining) < 5000:  
+        text = f"🔴WARNING: {ch_remaining} are left for traslation!"
+        send_mes(text)
+    return
+
+def format_news(site_name: str, article: SimpleNamespace) -> str:
+    return f"[{site_name}]({article.url}): *{article.title}*\n\n{article.text}"
 
 def load_urls() -> tuple[SimpleNamespace, ...]:
 
@@ -204,6 +219,7 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
     return tuple(news_items)
 
 
+
 def main() -> None:
 
     logger.info("Start....")
@@ -217,12 +233,12 @@ def main() -> None:
                 new, time = parse(site.url_desc, site.url, site.time)
                 if new:
                     for article in new:
-                        url, text = article
                         if DEBUG:
-                            text = translate_text(text, site.translate["from"], site.translate["to"]) if site.translate else text
-                            print_message(url=url, site_name=site.sitename, text=text)
+                            print_message(url=article.url, site_name=site.sitename, text=article.text)
                         else:
-                            send_mes(url=url, site_name=site.sitename, text=text)
+                            article.text = translate_text(article.text, site.translate["from"], site.translate["to"]) if site.translate else article.text
+                            text = format_news(site.sitename, article)
+                            send_mes(text)
                     site.time = time
 
         except Exception as e:
