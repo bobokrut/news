@@ -129,7 +129,7 @@ def parse_text(text: str, url_desc: str) -> str:  # type: ignore
 def parse_title(title: str, url_desc: str) -> str:
     match url_desc:
         case "novayagazeta_eu":
-            return remove_p_from_text(title).removesuffix("&nbsp;").translate(CHAR_TO_ESCAPE)
+            return remove_p_from_text(title).replace("&nbsp;", "").translate(CHAR_TO_ESCAPE)
         case _:
             return title.translate(CHAR_TO_ESCAPE)
 
