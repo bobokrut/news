@@ -78,7 +78,8 @@ def send_mes(text: str) -> None:
     response = requests.post(TELEGRAM_LINK, params=params).json()
 
     if not response["ok"]:
-        logger.exception("TELEGRAM ERROR: " + str(response))
+        logger.error("TELEGRAM ERROR: " + str(response))
+        logger.error(text)
 
 
 def make_request(url: str, url_desc: str) -> list[dict] | list:
@@ -116,14 +117,20 @@ def remove_p_from_text(text: str) -> str:
 
 def parse_text(text: str, url_desc: str) -> str:  # type: ignore
 
+
     match text, url_desc.split("_")[0]:
 
         case text, _ if len(text) < 3 or not text:
             return ""
         case text, "meduza":
-            return t.translate(CHAR_TO_ESCAPE) if len(t := text.split("<p>")[3]) > 3 else ""
+            text = t if len(t := text.split("<p>")[3]) > 3 else ""
         case _:
-            return text.translate(CHAR_TO_ESCAPE)
+            pass
+
+    if len(text) < 2000:
+        return text.translate(CHAR_TO_ESCAPE)
+
+    return (text[:2000] + "...").translate(CHAR_TO_ESCAPE)
 
 
 def parse_title(title: str, url_desc: str) -> str:
