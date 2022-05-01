@@ -117,7 +117,6 @@ def remove_p_from_text(text: str) -> str:
 
 def parse_text(text: str, url_desc: str) -> str:
 
-
     match text, url_desc.split("_")[0]:
 
         case text, _ if len(text) < 3 or not text:
