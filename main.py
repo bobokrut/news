@@ -119,7 +119,7 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
 
     match (feed.get("bozo_exception"), feed["entries"]):
 
-        case feedparser.CharacterEncodingOverride() | None | urllib.error.URLError(gaierror(-3, "Temporary failure in name resolution")), [*articles] if articles:  # type: ignore  NOTE: urlerror might not work
+        case feedparser.CharacterEncodingOverride() | None | urllib.error.URLError(gaierror(-3, "Temporary failure in name resolution")), [*articles] if articles:  # type: ignore # NOTE: urlerror might not work
 
             if feed["status"] != 200:
 
