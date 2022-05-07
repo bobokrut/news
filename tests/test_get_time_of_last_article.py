@@ -7,7 +7,10 @@ import time
     "url,url_desc",
     [
         ("https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS", "yle_en"),
-        ("https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI", "yle_rus"),
+        (
+            "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI",
+            "yle_rus",
+        ),
         ("https://meduza.io/rss/news", "meduza"),
         ("https://novayagazeta.ru/feed/rss", "novayagazeta_rus"),
         ("https://news.radio-t.com/rss", "radio-t"),
