@@ -6,7 +6,7 @@ services:
             - "/etc/localtime:/etc/localtime:ro"
         build: .
         restart: unless-stopped
-        platform: linux/arm/v7
+        # platform: linux/arm/v7
         env_file:
           - .env
         tty: true
