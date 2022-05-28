@@ -89,9 +89,9 @@ TRANSLATOR = Translator(DEEPL_TOKEN)
 def print_message(site_name: str, url: str, text: str) -> None:
 
     logger.debug(
-        f"\n\t{site_name=}  \
-                   \n\t{url=}        \
-                   \n\t{text=}"
+        f"\n\t{site_name=} \
+          \n\t{url=}       \
+          \n\t{text=}"
     )
 
 
