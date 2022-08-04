@@ -6,9 +6,11 @@ sites:
     urls:
       - name: yle_en
         url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
+        active: false
       - name: yle_rus
         url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
       - name: yle_vaasa
+        active: false
         url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-148149"
         translate:
           from: "fi"
@@ -34,7 +36,7 @@ sites:
 
   meduza:
     description: Russian news
-    active: true
+    active: false
     urls:
       - name: meduza
         url: "https://meduza.io/rss/news"
