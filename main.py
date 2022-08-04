@@ -2,17 +2,17 @@ import re
 from threading import Event
 import time
 from os import environ
-import ast
 import sys
 from types import SimpleNamespace
-from deepl import Translator
 import urllib.error
+from html.parser import HTMLParser
 
 
 from loguru import logger
 import yaml
 import feedparser
 import requests
+from deepl import Translator
 
 try:
     from dotenv import load_dotenv
@@ -46,12 +46,14 @@ DEBUG = environ.get("DEBUG", False) == "True"
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
-HEADERS = ast.literal_eval(
-    environ.get(
-        "HEADERS",
-        '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}',
+
+HEADERS = {
+    "user-agent": environ.get(
+        "USER_AGENT",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
     )
-)
+}
+
 
 CHAR_TO_ESCAPE: dict[int, str] = {
     i: "\\" + chr(i)
@@ -84,6 +86,31 @@ CHAR_TO_ESCAPE: dict[int, str] = {
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 EXIT = Event()
 TRANSLATOR = Translator(DEEPL_TOKEN)
+
+
+class TagsRemover(HTMLParser):
+    def __init__(self) -> None:
+
+        self.text: list[str] = []
+        super().__init__()
+
+    def get_text(self) -> str:
+
+        text = " ".join(self.text).rstrip()
+        self.text = []
+        return text
+
+    def handle_starttag(self, tag, attrs):  # type: ignore
+        pass
+
+    def handle_endtag(self, tag):  # type: ignore
+        pass
+
+    def handle_data(self, data: str) -> None:
+        self.text.append(data)
+
+
+parser = TagsRemover()
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -142,10 +169,6 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             return []
 
 
-def remove_p_from_text(text: str) -> str:
-    return re.sub(r"</?p>", "", text)
-
-
 def parse_text(text: str, url_desc: str) -> str:
 
     match text, url_desc.split("_")[0]:
@@ -155,6 +178,12 @@ def parse_text(text: str, url_desc: str) -> str:
 
         case text, "meduza":
             text = t if len(t := text.split("<p>")[3]) > 3 else ""
+
+        case text, "novayagazeta":
+
+            parser.feed(text)
+            text = parser.get_text()
+            logger.debug(1)
 
         case _:
             pass
@@ -169,11 +198,9 @@ def parse_title(title: str, url_desc: str) -> str:
     match url_desc:
 
         case "novayagazeta_eu":
-            return (
-                remove_p_from_text(title)
-                .replace("&nbsp;", "")
-                .translate(CHAR_TO_ESCAPE)
-            )
+
+            parser.feed(title)
+            return parser.get_text().translate(CHAR_TO_ESCAPE)
 
         case _:
             return title.translate(CHAR_TO_ESCAPE)
@@ -260,7 +287,6 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
     news_items: list[SimpleNamespace] = []
 
     with open(CONFIG_FILE, "r") as f:
-
         sites: dict[str, dict] = yaml.safe_load(f)["sites"]
 
     logger.debug(sites)
@@ -278,7 +304,6 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
         for url in urls["urls"]:
 
             if not (status := url.get("active", True)) and not status:
-
                 continue
 
             time = get_time_of_last_article(url=url["url"], url_desc=url["name"])
@@ -300,21 +325,27 @@ def main() -> None:
 
     logger.info("Start....")
     logger.info("Loading urls....")
+
     sites = load_urls()
+
     logger.success("Done!")
     logger.info("Starting main loop....")
+
     while not EXIT.is_set():
         try:
             for site in sites:
                 new, time = parse(site.url_desc, site.url, site.time)
+
                 if new:
                     for article in new:
+
                         if DEBUG:
                             print_message(
                                 url=article.url,
                                 site_name=site.sitename,
                                 text=article.text,
                             )
+
                         else:
                             article.text = (
                                 translate_text(
@@ -325,6 +356,7 @@ def main() -> None:
                                 if site.translate
                                 else article.text
                             )
+
                             article.title = (
                                 translate_text(
                                     article.title,
@@ -334,8 +366,10 @@ def main() -> None:
                                 if site.translate
                                 else article.title
                             )
+
                             text = format_news(site.sitename, article)
                             send_mes(text)
+
                     site.time = time
 
         except Exception as e:
