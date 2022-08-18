@@ -1,4 +1,3 @@
-import re
 from threading import Event
 import time
 from os import environ
