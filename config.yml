@@ -36,14 +36,14 @@ sites:
 
   meduza:
     description: Russian news
-    active: false
+    active: true
     urls:
       - name: meduza
         url: "https://meduza.io/rss/news"
   
   novayagazeta:
     description: Russian news
-    active: true
+    active: false
     urls:
       - name: novayagazeta_rus
         active: false
