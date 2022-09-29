@@ -58,3 +58,11 @@ sites:
     urls:
       - name: radio-t
         url: "https://news.radio-t.com/rss"
+
+  thelocal:
+    description: test of austrian news
+    active: true
+    urls:
+      - name: thelocal_at
+        active: true
+        url: https://feeds.thelocal.com/rss/at

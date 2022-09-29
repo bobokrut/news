@@ -346,25 +346,19 @@ def main() -> None:
                             )
 
                         else:
-                            article.text = (
-                                translate_text(
+                            if article.translate:
+
+                                article.text = translate_text(
                                     article.text,
                                     site.translate["from"],
                                     site.translate["to"],
                                 )
-                                if site.translate
-                                else article.text
-                            )
 
-                            article.title = (
-                                translate_text(
+                                article.title = translate_text(
                                     article.title,
                                     site.translate["from"],
                                     site.translate["to"],
                                 )
-                                if site.translate
-                                else article.title
-                            )
 
                             text = format_news(site.sitename, article)
                             send_mes(text)
