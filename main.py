@@ -83,6 +83,7 @@ CHAR_TO_ESCAPE: dict[int, str] = {
     )
 }
 TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+# TODO: rename, probably
 EXIT = Event()
 TRANSLATOR = Translator(DEEPL_TOKEN)
 
@@ -346,7 +347,7 @@ def main() -> None:
                             )
 
                         else:
-                            if article.translate:
+                            if site.translate:
 
                                 article.text = translate_text(
                                     article.text,
