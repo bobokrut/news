@@ -1,64 +1,39 @@
-name: CI
+name: Build and Push Docker Image
 
 on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: your_image_name
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
 jobs:
-
-  code-check:
-
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
+    - name: Check Out Repo
+      uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
+    - name: Set Up QEMU
+      uses: docker/setup-qemu-action@v2
 
-      - name: Installing poetry
-        run: pipx install poetry
+    - name: Set Up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-      - uses: actions/setup-python@v3.1.1
-        with:
-          python-version: '3.10.4' 
-          cache: 'poetry'
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ env.DOCKER_USERNAME }}
+        password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Install dependencies
-        run: |
-          poetry env use "3.10.4"
-          poetry install
-          
-      - name: mypy
-        run: |
-          poetry env use "3.10.4"
-          poetry run mypy *.py
-
-      - name: black
-        run: |
-          poetry env use "3.10.4"
-          poetry run black --check .
-
-
-      - name: pytest
-        run: |
-          poetry env use "3.10.4"
-          poetry run pytest **.py || if [ $? -eq 5 ] ; then echo 0; else echo $?; fi
-
-  build:
-
-    needs: code-check
-    runs-on: self-hosted
-
-    steps:
-
-      - name: deploying from master 
-        run: |
-          cd /home/pi/progs/news
-          git pull origin master
-          docker compose up -d --build
-
-      - name: sleep for 5 sec.
-        run: sleep 5
-
-      - name: printing logs from container
-        run: docker logs ptz_news
-
+    - name: Build and Push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+        platforms: linux/arm/v7
