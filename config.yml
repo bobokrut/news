@@ -1,68 +1,62 @@
-sites:
+yle:
+  description: Finnish news site
+  active: false
+  urls:
+    - name: yle_en
+      url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
+      active: false
+    - name: yle_rus
+      url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
+    - name: yle_vaasa
+      active: false
+      url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-148149"
+      translate:
+        from: "fi"
+        to: "en-us"
 
-  yle:
-    description: Finnish news site
-    active: true
-    urls:
-      - name: yle_en
-        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS"
-        active: false
-      - name: yle_rus
-        url:  "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NOVOSTI"
-      - name: yle_vaasa
-        active: false
-        url: "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_UUTISET&concepts=18-148149"
-        translate:
-          from: "fi"
-          to: "en-us"
+dtpptz:
+  description: Road incidents in Petrozavodsk
+  active: false
+  urls:
+    - name: dtp_ptz
+      url: "https://dtpptz.ru/"
 
-  dtpptz:
-    description: Road incidents in Petrozavodsk
-    active: false
-    urls:
-      - name: dtp_ptz
-        url: "https://dtpptz.ru/"
+stolicaonego:
+  description: Local news from Petrozavodsk
+  active: true
+  urls:
+    - name: stolica_onego_all
+      url: https://stolicaonego.ru/rss.php
 
-  stolicaonego:
-    description: Local news from Petrozavodsk
-    active: false
-    urls:
-      - name: stolica_onego_society
-        url: "https://stolicaonego.ru/news/society/"
-      - name: stolica_onego_incident
-        url: "https://stolicaonego.ru/news/incident/"
-      - name: stolica_onego_personal
-        url: "https://stolicaonego.ru/news/personal/"
+meduza:
+  description: Russian news
+  active: false
+  urls:
+    - name: meduza
+      url: "https://meduza.io/rss/news"
 
-  meduza:
-    description: Russian news
-    active: true
-    urls:
-      - name: meduza
-        url: "https://meduza.io/rss/news"
-  
-  novayagazeta:
-    description: Russian news
-    active: false
-    urls:
-      - name: novayagazeta_rus
-        active: false
-        url: "https://novayagazeta.ru/feed/rss"
-      - name: novayagazeta_eu
-        active: true
-        url: "https://novayagazeta.eu/feed/rss"
+novayagazeta:
+  description: Russian news
+  active: false
+  urls:
+    - name: novayagazeta_rus
+      active: false
+      url: "https://novayagazeta.ru/feed/rss"
+    - name: novayagazeta_eu
+      active: true
+      url: "https://novayagazeta.eu/feed/rss"
 
-  radiot:
-    description: Tech news from radio-t
-    active: true
-    urls:
-      - name: radio-t
-        url: "https://news.radio-t.com/rss"
+radiot:
+  description: Tech news from radio-t
+  active: true
+  urls:
+    - name: radio-t
+      url: "https://news.radio-t.com/rss"
 
-  thelocal:
-    description: test of austrian news
-    active: true
-    urls:
-      - name: thelocal_at
-        active: true
-        url: https://feeds.thelocal.com/rss/at
+thelocal:
+  description: test of austrian news
+  active: false
+  urls:
+    - name: thelocal_at
+      active: true
+      url: https://feeds.thelocal.com/rss/at
