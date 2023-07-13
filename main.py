@@ -85,8 +85,8 @@ translator = Translator(DEEPL_TOKEN)
 
 class TagsRemover(HTMLParser):
     def __init__(self) -> None:
-        self.text: list[str] = []
         super().__init__()
+        self.text: list[str] = []
 
     def get_text(self) -> str:
         text = " ".join(self.text).strip()
@@ -168,7 +168,6 @@ def parse_text(text: str, url_desc: str) -> str:
 
         case text, "stolica":
 
-            print_message(url_desc, "", text)
             parser.feed(text)
             text = parser.get_text()
             text = text.replace("\xa0", " ")
