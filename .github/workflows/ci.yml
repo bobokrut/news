@@ -39,5 +39,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.TAG }}
+        tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.TAG }}, ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
         platforms: linux/arm/v7
