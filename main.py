@@ -21,15 +21,15 @@ except ImportError:
 
 
 if not (TELEGRAM_TOKEN := environ.get("TOKEN")):
-    print("TELEGRAM_TOKEN is not specified!")
+    logger.error("TELEGRAM_TOKEN is not specified!")
     exit(1)
 
 if not (CHAT_ID := environ.get("CHAT_ID", "")):
-    print("CHAT_ID is not specified!")
+    logger.error("CHAT_ID is not specified!")
     exit(1)
 
 if not (DEEPL_TOKEN := environ.get("DEEPL_TOKEN", "")):
-    print("DEEPL_TOKEN is not specified!")
+    logger.error("DEEPL_TOKEN is not specified!")
     exit(1)
 
 
@@ -162,12 +162,10 @@ def parse_text(text: str, url_desc: str) -> str:
             text = t if len(t := text.split("<p>")[3]) > 3 else ""
 
         case text, "novayagazeta":
-
             parser.feed(text)
             text = parser.get_text()
 
         case text, "stolica":
-
             parser.feed(text)
             text = parser.get_text()
             text = text.replace("\xa0", " ")
@@ -209,7 +207,9 @@ def parse(
                     else article["link"]
                 )
                 text = parse_text(article["summary"], url_desc)
+
                 to_return.append(SimpleNamespace(url=link, title=title, text=text))
+
                 previous_time = time
 
         return to_return, previous_time
@@ -220,6 +220,7 @@ def parse(
 
 def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | None:
     index: int = 2 if DEBUG else 0
+
     if articles := make_request(url, url_desc):
         p_time: time.struct_time = articles[index]["published_parsed"]
 
@@ -312,7 +313,6 @@ def main() -> None:
                     site.time = time
 
                     for article in new:
-
                         if DEBUG:
                             print_message(
                                 url=article.url,
