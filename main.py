@@ -334,8 +334,8 @@ def main() -> None:
                                 site.translate["to"],
                             )
 
-                            text = format_news(site.sitename, article)
-                            send_mes(text)
+                        text = format_news(site.sitename, article)
+                        send_mes(text)
 
         except Exception as e:
             logger.exception(e)
