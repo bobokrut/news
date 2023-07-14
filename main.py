@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import urllib.error
@@ -7,6 +8,7 @@ from threading import Event
 from types import SimpleNamespace
 
 import feedparser
+import openai
 import requests
 import yaml
 from deepl import Translator
@@ -82,6 +84,8 @@ TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 exit = Event()
 translator = Translator(DEEPL_TOKEN)
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 class TagsRemover(HTMLParser):
     def __init__(self) -> None:
@@ -112,6 +116,28 @@ def print_message(site_name: str, url: str, text: str) -> None:
           \n\t{url=}       \
           \n\t{text=}"
     )
+
+
+def summarize(text: str) -> str:
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "user",
+                "content": "Can you provide a comprehensive and short summary of the given news article? The summary should cover all the key points and main ideas presented in the original article, while also condensing the information into a concise and easy-to-understand format. Please ensure that the summary includes relevant details and examples that support the main ideas, while avoiding any unnecessary information or repetition. The length of the summary should be appropriate for the length and complexity of the original text, providing a clear and accurate overview without omitting any important information. This article is in russian and provide the summary in russian",
+            },
+            {
+                "role": "user",
+                "content": text,
+            },
+        ],
+        temperature=1,
+        max_tokens=800,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    return response["choices"][0]["message"]["content"]
 
 
 def send_mes(text: str) -> None:
@@ -173,10 +199,11 @@ def parse_text(text: str, url_desc: str) -> str:
         case _:
             pass
 
-    if len(text) < 2000:
-        return text.translate(CHAR_TO_ESCAPE)
-
-    return (text[:2000] + "...").translate(CHAR_TO_ESCAPE)
+    return (
+        text.translate(CHAR_TO_ESCAPE)
+        if len(text) < 1000
+        else summarize(text).translate(CHAR_TO_ESCAPE)
+    )
 
 
 def parse_title(title: str, url_desc: str) -> str:
