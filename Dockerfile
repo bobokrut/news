@@ -1,29 +1,31 @@
-# Build stage
-FROM python:3.10.10-slim AS builder
+FROM python:3.10.10-slim as base
 
-WORKDIR /usr/src/app
+ENV PYTHONFAULTHANDLER=1 \
+    PYTHONHASHSEED=random \
+    PYTHONUNBUFFERED=1 \
+    GEOCODING_KEY=$geocode_key \
+    SECRET_KEY=$secret
 
-# Install build dependencies including GCC
+WORKDIR /app
+
+
+FROM base as builder
+
+
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
 RUN apt-get update && apt-get install -y gcc
 
-COPY requirements.txt ./
-RUN pip3 install --no-cache-dir --user -r requirements.txt
+COPY requirements.txt .
+
+RUN python -m venv /venv && . /venv/bin/activate && pip install -r requirements.txt
+
+FROM base as final
 
 COPY . .
 
-# Production stage
-FROM python:3.10.10-slim AS production
+COPY --from=builder /venv /venv
 
-WORKDIR /usr/src/app
-
-# Copy only the necessary artifacts from the builder stage
-COPY --from=builder /root/.local /root/.local
-COPY --from=builder /usr/src/app/*.py .
-
-# Add the user local bin directory to PATH
-ENV PATH=/root/.local/bin:$PATH
-
-# Set the user home directory
-ENV HOME=/root
-
-CMD [ "python", "./main.py" ]
+CMD [ "/venv/bin/python", "./main.py" ]
