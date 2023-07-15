@@ -11,9 +11,6 @@ RUN pip3 install --no-cache-dir --user -r requirements.txt
 
 COPY . .
 
-# Install any additional build dependencies and build your application
-RUN python setup.py install --user
-
 # Production stage
 FROM python:3.10.10-slim AS production
 
