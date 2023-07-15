@@ -1,10 +1,12 @@
+import calendar
+import datetime
 import os
 import sys
 import time
 import urllib.error
 from html.parser import HTMLParser
 from os import environ
-from threading import Event
+from threading import Event, Thread
 from types import SimpleNamespace
 
 import feedparser
@@ -140,6 +142,29 @@ def summarize(text: str) -> str:
     return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
 
+def get_openai_usage() -> tuple[float, float]:
+    today = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+    start_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[0])
+    end_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+
+    r = openai.api_requestor.APIRequestor()
+    resp = r.request(
+        "GET", f"/dashboard/billing/usage?start_date={today}&end_date={tomorrow}"
+    )
+    usage_today = resp[0].data["total_usage"] / 100  # this object has all the info
+    usage_today = round(usage_today, 4)
+
+    resp = r.request(
+        "GET",
+        f"/dashboard/billing/usage?start_date={start_of_month}&end_date={end_of_month}",
+    )
+    usage_this_month = resp[0].data["total_usage"] / 100  # this object has all the info
+    usage_this_month = round(usage_this_month, 4)
+
+    return usage_today, usage_this_month
+
+
 def send_mes(text: str) -> None:
     params: dict[str, str | int] = {}
     params["chat_id"] = CHAT_ID
@@ -201,7 +226,7 @@ def parse_text(text: str, url_desc: str) -> str:
 
     return (
         text.translate(CHAR_TO_ESCAPE)
-        if len(text) < 1000
+        if len(text) < 700
         else summarize(text).translate(CHAR_TO_ESCAPE)
     )
 
@@ -377,6 +402,16 @@ def quit(signo, _frame):  # type: ignore
     exit.set()
 
 
+def run_get_openai_usage() -> None:
+    while not exit.is_set():
+        now = datetime.datetime.now().time()
+        if now.hour == 23 and now.minute == 50:
+            usage_today, usage_this_month = get_openai_usage()
+            message = f"*Open AI Usage*\n_Today_: {usage_today}$\n_This month_: {usage_this_month}$"
+            send_mes(message)
+            exit.wait(50)
+
+
 if __name__ == "__main__":
     import signal
 
@@ -392,4 +427,11 @@ if __name__ == "__main__":
     logger.info(f"Debug is set to {BG_BRIGHT_YELLOW}{DEBUG}{COLOR_RESET}")
     logger.info(f"Config file is {BG_BRIGHT_YELLOW}{CONFIG_FILE}{COLOR_RESET}")
 
-    main()
+    main_thread = Thread(target=main)
+    usage_thread = Thread(target=run_get_openai_usage)
+
+    main_thread.start()
+    usage_thread.start()
+
+    main_thread.join()
+    usage_thread.join()
