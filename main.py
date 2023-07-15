@@ -137,7 +137,7 @@ def summarize(text: str) -> str:
         frequency_penalty=0,
         presence_penalty=0,
     )
-    return response["choices"][0]["message"]["content"]
+    return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
 
 def send_mes(text: str) -> None:
