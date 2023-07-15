@@ -86,8 +86,6 @@ TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 exit = Event()
 translator = Translator(DEEPL_TOKEN)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 class TagsRemover(HTMLParser):
     def __init__(self) -> None:
@@ -352,6 +350,7 @@ def main() -> None:
     logger.info("Loading urls....")
 
     sites = load_urls()
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
     logger.success("Done!")
     logger.info("Starting main loop....")
@@ -403,6 +402,7 @@ def quit(signo, _frame):  # type: ignore
 
 
 def run_get_openai_usage() -> None:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
     while not exit.is_set():
         now = datetime.datetime.now().time()
         if now.hour == 23 and now.minute == 50:
