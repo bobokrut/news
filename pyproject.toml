@@ -22,7 +22,7 @@ debugpy = "^1.6.7"
 ruff = "^0.0.278"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core", "setuptools >= 40"]
 build-backend = "poetry.core.masonry.api"
 
 
