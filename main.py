@@ -224,7 +224,7 @@ def parse_text(text: str, url_desc: str) -> str:
 
     return (
         text.translate(CHAR_TO_ESCAPE)
-        if len(text) < 700
+        if len(text) < 900
         else summarize(text).translate(CHAR_TO_ESCAPE)
     )
 
