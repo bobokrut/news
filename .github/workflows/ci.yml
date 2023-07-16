@@ -29,15 +29,11 @@ jobs:
       with:
         username: ${{ env.DOCKER_USERNAME }}
         password: ${{ env.DOCKER_PASSWORD }}
-        
-    - name: Extract tag name
-      id: get_tag
-      run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
 
     - name: Build and Push
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
-        tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.get_tag.outputs.TAG }}, ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+        tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
         platforms: linux/arm/v7
