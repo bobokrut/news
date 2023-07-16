@@ -404,7 +404,9 @@ def run_get_openai_usage() -> None:
     while not exit.is_set():
         now = datetime.datetime.now().time()
         if now.hour == 23 and now.minute == 50:
-            usage_today, usage_this_month = get_openai_usage()
+            usage_today, usage_this_month = [
+                str(usage).replace(".", "\\.") for usage in get_openai_usage()
+            ]
             message = f"*Open AI Usage*\n_Today_: {usage_today}$\n_This month_: {usage_this_month}$"
             send_mes(message)
             exit.wait(50)
