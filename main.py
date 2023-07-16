@@ -1,6 +1,5 @@
 import calendar
 import datetime
-import os
 import sys
 import time
 import urllib.error
@@ -36,6 +35,11 @@ if not (DEEPL_TOKEN := environ.get("DEEPL_TOKEN", "")):
     logger.error("DEEPL_TOKEN is not specified!")
     exit(1)
 
+if not (OPENAI_API_KEY := environ.get("OPENAI_API_KEY", "")):
+    logger.error("OPENAI_API_KEY is not specified!")
+    exit(1)
+
+openai.api_key = OPENAI_API_KEY
 
 BG_BRIGHT_YELLOW = "\u001b[33;1m\u001b[7m"
 COLOR_RESET = "\u001b[0m"
@@ -93,18 +97,14 @@ class TagsRemover(HTMLParser):
         self.text: list[str] = []
 
     def get_text(self) -> str:
-        text = " ".join(self.text).strip()
+        text = " ".join(self.text)
         self.text = []
         return text
 
-    def handle_starttag(self, tag, attrs):  # type: ignore
-        pass
-
-    def handle_endtag(self, tag):  # type: ignore
-        pass
-
     def handle_data(self, data: str) -> None:
-        self.text.append(data)
+        data = data.strip()
+        if data:
+            self.text.append(data)
 
 
 parser = TagsRemover()
@@ -150,14 +150,14 @@ def get_openai_usage() -> tuple[float, float]:
     resp = r.request(
         "GET", f"/dashboard/billing/usage?start_date={today}&end_date={tomorrow}"
     )
-    usage_today = resp[0].data["total_usage"] / 100  # this object has all the info
+    usage_today = resp[0].data["total_usage"] / 100
     usage_today = round(usage_today, 4)
 
     resp = r.request(
         "GET",
         f"/dashboard/billing/usage?start_date={start_of_month}&end_date={end_of_month}",
     )
-    usage_this_month = resp[0].data["total_usage"] / 100  # this object has all the info
+    usage_this_month = resp[0].data["total_usage"] / 100
     usage_this_month = round(usage_this_month, 4)
 
     return usage_today, usage_this_month
@@ -350,7 +350,6 @@ def main() -> None:
     logger.info("Loading urls....")
 
     sites = load_urls()
-    openai.api_key = os.getenv("OPENAI_API_KEY")
 
     logger.success("Done!")
     logger.info("Starting main loop....")
@@ -402,7 +401,6 @@ def quit(signo, _frame):  # type: ignore
 
 
 def run_get_openai_usage() -> None:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
     while not exit.is_set():
         now = datetime.datetime.now().time()
         if now.hour == 23 and now.minute == 50:
