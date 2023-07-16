@@ -19,5 +19,16 @@ repos:
       - id: ruff
         args: [--select, T20, --select, E, --ignore, E501, --ignore, E402]
 
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: poetry run pytest
+        language: system
+        pass_filenames: false
+        always_run: false
+        types_or: [python]
+        require_serial: true
+
 default_language_version:
     python: python3.11
