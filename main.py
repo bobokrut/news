@@ -109,7 +109,7 @@ class Text(HTMLParser):
         if "\xa0" in text:
             text = text.replace("\xa0", " ")
 
-        if len(text) > 1500:
+        if len(text) > 1000:
             self.handle_long_text(text)
         else:
             self.handle_short_text(text)
