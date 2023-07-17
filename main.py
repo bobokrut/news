@@ -104,18 +104,13 @@ class Text(HTMLParser):
         self.html_text: list[str] = []
         self.text: str = ""
         self.url: str | None = None
+        self.long_text: bool = False
 
         if len(text) > 1000:
-            text = self.summarize(text)
-
-        if self.check_if_html(text):
-            self.feed(text)
-            self.text = " ".join(self.html_text)
+            self.handle_long_text(text)
         else:
-            self.text = text.translate(CHAR_TO_ESCAPE)
+            self.handle_short_text(text)
 
-        if "\xa0" in self.text:
-            self.text = self.text.replace("\xa0", " ")
         logger.debug(f"{self.text=}")
 
     def __eq__(self, o: object) -> bool:
@@ -127,6 +122,27 @@ class Text(HTMLParser):
 
         return False
 
+    def handle_long_text(self, text: str) -> None:
+        self.long_text = True
+
+        if self.check_if_html(text):
+            self.feed(text)
+            text = " ".join(self.html_text)
+
+        self.text = self.summarize(text).translate(CHAR_TO_ESCAPE)
+
+    def handle_short_text(self, text: str) -> None:
+        if self.check_if_html(text):
+            self.feed(text)
+            text = " ".join(self.html_text)
+        else:
+            text = text.strip().translate(CHAR_TO_ESCAPE)
+
+        self.text = text
+
+        if "\xa0" in self.text:
+            self.text = self.text.replace("\xa0", " ")
+
     def __str__(self) -> str:
         return self.text
 
@@ -134,7 +150,10 @@ class Text(HTMLParser):
         return bool(re.search(r"<[^>]*>", text))
 
     def handle_data(self, data: str) -> None:
-        data = data.strip().translate(CHAR_TO_ESCAPE)
+        if self.long_text:
+            data = data.strip()
+        else:
+            data = data.strip().translate(CHAR_TO_ESCAPE)
 
         if not data:
             return
@@ -150,6 +169,9 @@ class Text(HTMLParser):
             self.url = dict(attrs).get("href", None)
 
     def summarize(self, text: str) -> str:
+        if len(text) > 3000:
+            text = text[:3000]
+
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
