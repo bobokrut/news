@@ -106,7 +106,10 @@ class Text(HTMLParser):
         self.url: str | None = None
         self.long_text: bool = False
 
-        if len(text) > 1000:
+        if "\xa0" in text:
+            text = text.replace("\xa0", " ")
+
+        if len(text) > 1500:
             self.handle_long_text(text)
         else:
             self.handle_short_text(text)
@@ -129,7 +132,7 @@ class Text(HTMLParser):
             self.feed(text)
             text = " ".join(self.html_text)
 
-        self.text = self.summarize(text).translate(CHAR_TO_ESCAPE)
+        self.text = self.summarize(self.remove_urls(text)).translate(CHAR_TO_ESCAPE)
 
     def handle_short_text(self, text: str) -> None:
         if self.check_if_html(text):
@@ -139,9 +142,6 @@ class Text(HTMLParser):
             text = text.strip().translate(CHAR_TO_ESCAPE)
 
         self.text = text
-
-        if "\xa0" in self.text:
-            self.text = self.text.replace("\xa0", " ")
 
     def __str__(self) -> str:
         return self.text
@@ -191,6 +191,9 @@ class Text(HTMLParser):
             presence_penalty=0,
         )
         return response["choices"][0]["message"]["content"] + "\n\nAI summary"
+
+    def remove_urls(self, text: str) -> str:
+        return re.sub(r"http\S+", "", text)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
