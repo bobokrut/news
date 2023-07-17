@@ -1,4 +1,4 @@
-FROM python:3.10.10-slim as base
+FROM arm32v7/python:3.10.10-slim as base
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
