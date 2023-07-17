@@ -132,7 +132,9 @@ class Text(HTMLParser):
             self.feed(text)
             text = " ".join(self.html_text)
 
-        self.text = self.summarize(self.remove_urls(text)).translate(CHAR_TO_ESCAPE)
+        self.text = self.summarize(self.remove_markdown_urls(text)).translate(
+            CHAR_TO_ESCAPE
+        )
 
     def handle_short_text(self, text: str) -> None:
         if self.check_if_html(text):
@@ -192,8 +194,8 @@ class Text(HTMLParser):
         )
         return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
-    def remove_urls(self, text: str) -> str:
-        return re.sub(r"http\S+", "", text)
+    def remove_markdown_urls(self, text: str) -> str:
+        return re.sub(r"\[.*?\]\(.*?\)", "", text)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
