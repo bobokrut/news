@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import re
 import sys
 import time
 import urllib.error
@@ -45,7 +46,7 @@ BG_BRIGHT_YELLOW = "\u001b[33;1m\u001b[7m"
 COLOR_RESET = "\u001b[0m"
 FG_BRIGHT_YELLOW = "\u001b[33;1m"
 
-DEBUG = environ.get("DEBUG", False) == "True"
+DEBUG = environ.get("DEBUG", "False") == "True"
 LOGGING_LEVEL = "DEBUG" if DEBUG else environ.get("LOGGING_LEVEL", "INFO")
 
 CONFIG_FILE = environ.get("CONFIG_FILE", "config.yml")
@@ -86,28 +87,88 @@ CHAR_TO_ESCAPE: dict[int, str] = {
         ).encode("utf8")
     )
 }
-TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+if DEBUG:
+    token = environ.get("DEBUG_TOKEN")
+    TELEGRAM_LINK = f"https://api.telegram.org/bot{token}/sendMessage"
+else:
+    TELEGRAM_LINK = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+
 exit = Event()
 translator = Translator(DEEPL_TOKEN)
 
 
-class TagsRemover(HTMLParser):
-    def __init__(self) -> None:
+class Text(HTMLParser):
+    def __init__(self, text) -> None:
         super().__init__()
-        self.text: list[str] = []
 
-    def get_text(self) -> str:
-        text = " ".join(self.text)
-        self.text = []
-        return text
+        self.html_text: list[str] = []
+        self.text: str = ""
+        self.url: str | None = None
+
+        if len(text) > 1000:
+            text = self.summarize(text)
+
+        if self.check_if_html(text):
+            self.feed(text)
+            self.text = " ".join(self.html_text)
+        else:
+            self.text = text.translate(CHAR_TO_ESCAPE)
+
+        if "\xa0" in self.text:
+            self.text = self.text.replace("\xa0", " ")
+        logger.debug(f"{self.text=}")
+
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, Text):
+            return self.text == o.text
+
+        if isinstance(o, str):
+            return self.text == o
+
+        return False
+
+    def __str__(self) -> str:
+        return self.text
+
+    def check_if_html(self, text: str) -> bool:
+        return bool(re.search(r"<[^>]*>", text))
 
     def handle_data(self, data: str) -> None:
-        data = data.strip()
-        if data:
-            self.text.append(data)
+        data = data.strip().translate(CHAR_TO_ESCAPE)
 
+        if not data:
+            return
 
-parser = TagsRemover()
+        if self.url:
+            data = f"[{data}]({self.url})"
+            self.url = None
+
+        self.html_text.append(data)
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "a":
+            self.url = dict(attrs).get("href", None)
+
+    def summarize(self, text: str) -> str:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "user",
+                    "content": "Can you provide a comprehensive and short summary of the given news article? The summary should cover all the key points and main ideas presented in the original article, while also condensing the information into a concise and easy-to-understand format. Please ensure that the summary includes relevant details and examples that support the main ideas, while avoiding any unnecessary information or repetition. The length of the summary should be appropriate for the length and complexity of the original text, providing a clear and accurate overview without omitting any important information. This article is in russian and provide the summary in russian",
+                },
+                {
+                    "role": "user",
+                    "content": text,
+                },
+            ],
+            temperature=1,
+            max_tokens=800,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+        )
+        return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -116,28 +177,6 @@ def print_message(site_name: str, url: str, text: str) -> None:
           \n\t{url=}       \
           \n\t{text=}"
     )
-
-
-def summarize(text: str) -> str:
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "user",
-                "content": "Can you provide a comprehensive and short summary of the given news article? The summary should cover all the key points and main ideas presented in the original article, while also condensing the information into a concise and easy-to-understand format. Please ensure that the summary includes relevant details and examples that support the main ideas, while avoiding any unnecessary information or repetition. The length of the summary should be appropriate for the length and complexity of the original text, providing a clear and accurate overview without omitting any important information. This article is in russian and provide the summary in russian",
-            },
-            {
-                "role": "user",
-                "content": text,
-            },
-        ],
-        temperature=1,
-        max_tokens=800,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
 
 def get_openai_usage() -> tuple[float, float]:
@@ -163,7 +202,7 @@ def get_openai_usage() -> tuple[float, float]:
     return usage_today, usage_this_month
 
 
-def send_mes(text: str) -> None:
+def send_mes(text: str) -> bool:
     params: dict[str, str | int] = {}
     params["chat_id"] = CHAT_ID
     params["parse_mode"] = "MarkdownV2"
@@ -177,6 +216,9 @@ def send_mes(text: str) -> None:
     if not response["ok"]:
         logger.error("TELEGRAM ERROR: " + str(response))
         logger.error(text)
+        return False
+
+    return True
 
 
 def make_request(url: str, url_desc: str) -> list[dict] | list:
@@ -202,41 +244,22 @@ def make_request(url: str, url_desc: str) -> list[dict] | list:
             return []
 
 
-def parse_text(text: str, url_desc: str) -> str:
+def parse_text(text: str, url_desc: str) -> str | Text:
     match text, url_desc.split("_")[0]:
         case text, _ if not text or len(text) < 3:
             return ""
 
         case text, "meduza":
-            text = t if len(t := text.split("<p>")[3]) > 3 else ""
-
-        case text, "novayagazeta":
-            parser.feed(text)
-            text = parser.get_text()
-
-        case text, "stolica":
-            parser.feed(text)
-            text = parser.get_text()
-            text = text.replace("\xa0", " ")
+            text_return = Text(t if len(t := text.split("<p>")[3]) > 3 else "")
 
         case _:
-            pass
+            text_return = Text(text)
 
-    return (
-        text.translate(CHAR_TO_ESCAPE)
-        if len(text) < 900
-        else summarize(text).translate(CHAR_TO_ESCAPE)
-    )
+    return text_return
 
 
-def parse_title(title: str, url_desc: str) -> str:
-    match url_desc:
-        case "novayagazeta_eu":
-            parser.feed(title)
-            return parser.get_text().translate(CHAR_TO_ESCAPE)
-
-        case _:
-            return title.translate(CHAR_TO_ESCAPE)
+def parse_title(title: str) -> Text:
+    return Text(title)
 
 
 def parse(
@@ -250,7 +273,7 @@ def parse(
 
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
-                title = parse_title(article["title"], url_desc)
+                title = parse_title(article["title"])
                 link = (
                     article["link"].split("?")[0]
                     if url_desc.startswith("yle")
@@ -363,13 +386,13 @@ def main() -> None:
                     site.time = time
 
                     for article in new:
-                        if DEBUG:
-                            print_message(
-                                url=article.url,
-                                site_name=site.sitename,
-                                text=article.text,
-                            )
-                            continue
+                        # if DEBUG:
+                        #     print_message(
+                        #         url=article.url,
+                        #         site_name=site.sitename,
+                        #         text=article.text,
+                        #     )
+                        #     continue
 
                         if site.translate:
                             article.text = translate_text(

@@ -12,48 +12,33 @@ def test_all_env_var_are_correct():
 
 
 def test_tag_remover():
-    from main import TagsRemover
+    from main import Text
 
-    tr = TagsRemover()
+    assert Text("<p>Hello <b>World</b></p>") == "Hello World"
 
-    tr.feed("<p>Hello <b>World</b></p>")
-    assert tr.get_text() == "Hello World"
-
-    tr.feed("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
-    assert tr.get_text() == "Hello World Google"
-
-    tr.feed("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
-    assert tr.get_text() == "Hello World Google"
-
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i></p>"
+    assert (
+        Text("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
+        == "Hello World [Google](https://google.com)"
     )
-    assert tr.get_text() == "Hello World Google Italic"
 
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code></p>"
+    assert (
+        Text("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
+        == "Hello World [Google](https://google.com)"
     )
-    assert tr.get_text() == "Hello World Google Italic Code"
 
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code> <code>Code</code></p>"
+    assert (
+        Text(
+            "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i></p>"
+        )
+        == "Hello World [Google](https://google.com) Italic"
     )
-    assert tr.get_text() == "Hello World Google Italic Code Code"
 
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code> <code>Code</code> <code>Code</code></p>"
+    assert (
+        Text(
+            "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code></p>"
+        )
+        == "Hello World [Google](https://google.com) Italic Code"
     )
-    assert tr.get_text() == "Hello World Google Italic Code Code Code"
-
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code> <code>Code</code> <code>Code</code> <code>Code</code></p>"
-    )
-    assert tr.get_text() == "Hello World Google Italic Code Code Code Code"
-
-    tr.feed(
-        "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code> <code>Code</code> <code>Code</code> <code>Code</code> <code>Code</code></p>"
-    )
-    assert tr.get_text() == "Hello World Google Italic Code Code Code Code Code"
 
 
 def test_get_openai_usage():
@@ -68,17 +53,12 @@ def test_get_openai_usage():
     assert isinstance(usage_2, float)
 
 
-def test_summarize():
+def test_general():
     from unittest.mock import patch
 
-    import main
-    from main import load_urls, parse
+    from main import Text, format_news, load_urls, parse, send_mes
 
-    main.DEBUG = True
-
-    with patch("main.summarize") as mock_summarize:
-        mock_summarize.side_effect = lambda text: text
-
+    with patch.object(Text, "summarize", side_effect=lambda x: x):
         sites = load_urls()
 
         for site in sites:
@@ -87,3 +67,19 @@ def test_summarize():
             assert new is not None
             assert time is not None
             assert len(new) == 2
+
+            for article in new:
+                text = format_news(site.sitename, article)
+                assert send_mes(text) is True
+
+
+def test_validate_markdownV2_formatting():
+    from main import Text, send_mes
+
+    text = """
+    <p>This is an example message with <strong class="bold">bold</strong>, <em class="italic">italic</em>,
+        <u class="underline">underline</u>, <s class="strikethrough">strikethrough</s>, <span class="spoiler">spoiler</span>,
+        <code class="inline-code">inline fixed-width code</code>, and <pre class="pre-code">pre-formatted fixed-width code block</pre>.</p>
+    <p>Here is a link: <a href="http://www.example.com/">Inline URL</a></p>
+    """
+    assert send_mes(Text(text)) is True
