@@ -109,10 +109,18 @@ class Text(HTMLParser):
         if "\xa0" in text:
             text = text.replace("\xa0", " ")
 
-        if len(text) > 1000:
-            self.handle_long_text(text)
+        if self.check_if_html(text):
+            self.feed(text)
+            text = " ".join(self.html_text)
         else:
-            self.handle_short_text(text)
+            text = text.strip().translate(CHAR_TO_ESCAPE)
+
+        if len(text) > 1000:
+            text = self.summarize(self.remove_markdown_urls(text)).translate(
+                CHAR_TO_ESCAPE
+            )
+
+        self.text = text
 
         logger.debug(f"{self.text=}")
 

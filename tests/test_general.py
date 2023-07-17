@@ -58,7 +58,7 @@ def test_general():
 
     from main import Text, format_news, load_urls, parse, send_mes
 
-    with patch.object(Text, "summarize", side_effect=lambda x: x):
+    with patch.object(Text, "summarize", side_effect=lambda x: x.replace("\\", "")):
         sites = load_urls()
 
         for site in sites:
