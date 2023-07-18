@@ -102,6 +102,18 @@ class Text(HTMLParser):
         super().__init__()
 
         self.html_text: list[str] = []
+        self.allowed_tags = [
+            "b",
+            "strong",
+            "i",
+            "em",
+            "u",
+            "ins",
+            "s",
+            "strike",
+            "del",
+            "a",
+        ]
         self.text: str = ""
         self.url: str | None = None
         self.long_text: bool = False
@@ -111,14 +123,12 @@ class Text(HTMLParser):
 
         if self.check_if_html(text):
             self.feed(text)
-            text = " ".join(self.html_text)
+            text = "".join(self.html_text).strip()
         else:
-            text = text.strip().translate(CHAR_TO_ESCAPE)
+            text = text.strip()
 
-        if len(text) > 1000:
-            text = self.summarize(self.remove_markdown_urls(text)).translate(
-                CHAR_TO_ESCAPE
-            )
+        if len(t := self.remove_html_tags(text)) > 1000:
+            text = self.summarize(t)
 
         self.text = text
 
@@ -133,26 +143,6 @@ class Text(HTMLParser):
 
         return False
 
-    def handle_long_text(self, text: str) -> None:
-        self.long_text = True
-
-        if self.check_if_html(text):
-            self.feed(text)
-            text = " ".join(self.html_text)
-
-        self.text = self.summarize(self.remove_markdown_urls(text)).translate(
-            CHAR_TO_ESCAPE
-        )
-
-    def handle_short_text(self, text: str) -> None:
-        if self.check_if_html(text):
-            self.feed(text)
-            text = " ".join(self.html_text)
-        else:
-            text = text.strip().translate(CHAR_TO_ESCAPE)
-
-        self.text = text
-
     def __str__(self) -> str:
         return self.text
 
@@ -160,27 +150,29 @@ class Text(HTMLParser):
         return bool(re.search(r"<[^>]*>", text))
 
     def handle_data(self, data: str) -> None:
-        if self.long_text:
-            data = data.strip()
-        else:
-            data = data.strip().translate(CHAR_TO_ESCAPE)
-
-        if not data:
-            return
-
-        if self.url:
-            data = f"[{data}]({self.url})"
-            self.url = None
-
         self.html_text.append(data)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag not in self.allowed_tags:
+            return
+        logger.debug(f"{tag=}")
+
         if tag == "a":
-            self.url = dict(attrs).get("href", None)
+            url = dict(attrs).get("href")
+            self.html_text.append(f"<a href='{url}'>")
+            return
+
+        self.html_text.append(f"<{tag.strip()}>")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag not in self.allowed_tags:
+            return
+
+        self.html_text.append(f"</{tag.strip()}>")
 
     def summarize(self, text: str) -> str:
-        if len(text) > 3000:
-            text = text[:3000]
+        if len(text) > 2000:
+            text = text[:2000]
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -202,8 +194,9 @@ class Text(HTMLParser):
         )
         return response["choices"][0]["message"]["content"] + "\n\nAI summary"
 
-    def remove_markdown_urls(self, text: str) -> str:
-        return re.sub(r"\[.*?\]\(.*?\)", "", text)
+    def remove_html_tags(self, text: str) -> str:
+        """Remove html tags from a string but keep the text"""
+        return re.sub(r"<[^>]*>", "", text)
 
 
 def print_message(site_name: str, url: str, text: str) -> None:
@@ -237,10 +230,10 @@ def get_openai_usage() -> tuple[float, float]:
     return usage_today, usage_this_month
 
 
-def send_mes(text: str) -> bool:
+def send_mes(text: Text | str) -> bool:
     params: dict[str, str | int] = {}
     params["chat_id"] = CHAT_ID
-    params["parse_mode"] = "MarkdownV2"
+    params["parse_mode"] = "HTML"
     params["disable_web_page_preview"] = True
     params["disable_notification"] = False
     params["text"] = text
@@ -254,6 +247,10 @@ def send_mes(text: str) -> bool:
         return False
 
     return True
+
+
+def format_news(site_name: str, article: SimpleNamespace) -> str:
+    return f"<a href='{article.url}'>{site_name}</a>: <b>{article.title}</b>\n\n{article.text}"
 
 
 def make_request(url: str, url_desc: str) -> list[dict] | list:
@@ -364,10 +361,6 @@ def check_translator_usage() -> None:
     return
 
 
-def format_news(site_name: str, article: SimpleNamespace) -> str:
-    return f"[{site_name}]({article.url}): *{article.title}*\n\n{article.text}"
-
-
 def load_urls() -> tuple[SimpleNamespace, ...]:
     news_items: list[SimpleNamespace] = []
 
@@ -421,14 +414,6 @@ def main() -> None:
                     site.time = time
 
                     for article in new:
-                        # if DEBUG:
-                        #     print_message(
-                        #         url=article.url,
-                        #         site_name=site.sitename,
-                        #         text=article.text,
-                        #     )
-                        #     continue
-
                         if site.translate:
                             article.text = translate_text(
                                 article.text,
@@ -459,9 +444,15 @@ def quit(signo, _frame):  # type: ignore
 
 
 def run_get_openai_usage() -> None:
+    date = None
     while not exit.is_set():
         now = datetime.datetime.now().time()
-        if now.hour == 23 and now.minute == 50:
+        if (
+            now.hour == 23
+            and now.minute == 50
+            and date != datetime.datetime.now().date()
+        ):
+            date = datetime.datetime.now().date()
             usage_today, usage_this_month = [
                 str(usage).replace(".", "\\.") for usage in get_openai_usage()
             ]
