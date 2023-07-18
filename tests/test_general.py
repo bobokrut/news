@@ -1,8 +1,12 @@
+from os import environ
+from unittest.mock import patch
+
+from dotenv import load_dotenv
+
+from main import Text, format_news, get_openai_usage, load_urls, parse, send_mes
+
+
 def test_all_env_var_are_correct():
-    from os import environ
-
-    from dotenv import load_dotenv
-
     load_dotenv()
 
     assert environ.get("TOKEN") is not None
@@ -12,38 +16,27 @@ def test_all_env_var_are_correct():
 
 
 def test_tag_remover():
-    from main import Text
+    """Shoudl remove all html tags except <b>, <strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <del>, <a> but keep the text. Any atts except href should be removed."""
 
-    assert Text("<p>Hello <b>World</b></p>") == "Hello World"
+    text = """
+    <p>This is an example message with <strong class="bold">bold</strong>, <em class="italic">italic</em>,
+        <u class="underline">underline</u>, <s class="strikethrough">strikethrough</s>, <span class="spoiler">spoiler</span>,
+        <code class="inline-code">inline fixed-width code</code>, and <pre class="pre-code">pre-formatted fixed-width code block</pre>.</p>
+    <p>Here is a link: <a href="http://www.example.com/">Inline URL</a></p>
+    """
 
-    assert (
-        Text("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
-        == "Hello World [Google](https://google.com)"
-    )
-
-    assert (
-        Text("<p>Hello <b>World</b> <a href='https://google.com'>Google</a></p>")
-        == "Hello World [Google](https://google.com)"
-    )
+    text = Text(text)
 
     assert (
-        Text(
-            "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i></p>"
-        )
-        == "Hello World [Google](https://google.com) Italic"
-    )
-
-    assert (
-        Text(
-            "<p>Hello <b>World</b> <a href='https://google.com'>Google</a> <i>Italic</i> <code>Code</code></p>"
-        )
-        == "Hello World [Google](https://google.com) Italic Code"
+        text.text
+        == """This is an example message with <strong>bold</strong>, <em>italic</em>,
+        <u>underline</u>, <s>strikethrough</s>, spoiler,
+        inline fixed-width code, and pre-formatted fixed-width code block.
+    Here is a link: <a href='http://www.example.com/'>Inline URL</a>"""
     )
 
 
 def test_get_openai_usage():
-    from main import get_openai_usage
-
     usage_1, usage_2 = get_openai_usage()
 
     assert usage_1 is not None
@@ -54,11 +47,7 @@ def test_get_openai_usage():
 
 
 def test_general():
-    from unittest.mock import patch
-
-    from main import Text, format_news, load_urls, parse, send_mes
-
-    with patch.object(Text, "summarize", side_effect=lambda x: x.replace("\\", "")):
+    with patch.object(Text, "summarize", side_effect=lambda x: x):
         sites = load_urls()
 
         for site in sites:
@@ -73,9 +62,7 @@ def test_general():
                 assert send_mes(text) is True
 
 
-def test_validate_markdownV2_formatting():
-    from main import Text, send_mes
-
+def test_validate_formatting():
     text = """
     <p>This is an example message with <strong class="bold">bold</strong>, <em class="italic">italic</em>,
         <u class="underline">underline</u>, <s class="strikethrough">strikethrough</s>, <span class="spoiler">spoiler</span>,
