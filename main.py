@@ -453,10 +453,8 @@ def run_get_openai_usage() -> None:
             and date != datetime.datetime.now().date()
         ):
             date = datetime.datetime.now().date()
-            usage_today, usage_this_month = [
-                str(usage).replace(".", "\\.") for usage in get_openai_usage()
-            ]
-            message = f"*Open AI Usage*\n_Today_: {usage_today}$\n_This month_: {usage_this_month}$"
+            usage_today, usage_this_month = get_openai_usage()
+            message = f"<b>Open AI Usage</b>\n\n<i>nToday</i>: {usage_today}$\n<i>This month</i>: {usage_this_month}$"
             send_mes(message)
             exit.wait(50)
 
