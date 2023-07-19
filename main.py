@@ -101,7 +101,9 @@ class Text(HTMLParser):
     def __init__(self, text) -> None:
         super().__init__()
 
+        self.html_text_formated: list[str] = []
         self.html_text: list[str] = []
+
         self.allowed_tags = [
             "b",
             "strong",
@@ -114,25 +116,8 @@ class Text(HTMLParser):
             "del",
             "a",
         ]
-        self.text: str = ""
         self.url: str | None = None
-        self.long_text: bool = False
-
-        if "\xa0" in text:
-            text = text.replace("\xa0", " ")
-
-        if self.check_if_html(text):
-            self.feed(text)
-            text = "".join(self.html_text).strip()
-        else:
-            text = text.strip()
-
-        if len(t := self.remove_html_tags(text)) > 1000:
-            text = self.summarize(t)
-
-        self.text = text
-
-        logger.debug(f"{self.text=}")
+        self.text: str = self.handle_text(text)
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, Text):
@@ -146,11 +131,35 @@ class Text(HTMLParser):
     def __str__(self) -> str:
         return self.text
 
+    def handle_text(self, unprocessed_text) -> str:
+        text_formated = ""
+        text = ""
+
+        if "\xa0" in unprocessed_text:
+            unprocessed_text = unprocessed_text.replace("\xa0", " ")
+
+        if self.check_if_html(unprocessed_text):
+            self.feed(unprocessed_text)
+            text_formated = "".join(self.html_text_formated).strip()
+            text = "".join(self.html_text).strip()
+
+            self.html_text_formated.clear()
+            self.html_text.clear()
+
+        else:
+            text = unprocessed_text.strip()
+
+        if len(text) > 1000:
+            return self.summarize(text)
+
+        return text_formated or text
+
     def check_if_html(self, text: str) -> bool:
         return bool(re.search(r"<[^>]*>", text))
 
     def handle_data(self, data: str) -> None:
         self.html_text.append(data)
+        self.html_text_formated.append(data)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag not in self.allowed_tags:
@@ -159,16 +168,16 @@ class Text(HTMLParser):
 
         if tag == "a":
             url = dict(attrs).get("href")
-            self.html_text.append(f"<a href='{url}'>")
+            self.html_text_formated.append(f"<a href='{url}'>")
             return
 
-        self.html_text.append(f"<{tag.strip()}>")
+        self.html_text_formated.append(f"<{tag.strip()}>")
 
     def handle_endtag(self, tag: str) -> None:
         if tag not in self.allowed_tags:
             return
 
-        self.html_text.append(f"</{tag.strip()}>")
+        self.html_text_formated.append(f"</{tag.strip()}>")
 
     def summarize(self, text: str) -> str:
         if len(text) > 2000:
@@ -324,7 +333,7 @@ def parse(
 
 
 def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | None:
-    index: int = 2 if DEBUG else 0
+    index: int = 1 if DEBUG else 0
 
     if articles := make_request(url, url_desc):
         p_time: time.struct_time = articles[index]["published_parsed"]

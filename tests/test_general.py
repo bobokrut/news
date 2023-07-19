@@ -55,7 +55,7 @@ def test_general():
 
             assert new is not None
             assert time is not None
-            assert len(new) == 2
+            assert len(new) == 1
 
             for article in new:
                 text = format_news(site.sitename, article)
