@@ -4,10 +4,10 @@ import re
 import sys
 import time
 import urllib.error
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from os import environ
 from threading import Event, Thread
-from types import SimpleNamespace
 
 import feedparser
 import openai
@@ -208,6 +208,22 @@ class Text(HTMLParser):
         return re.sub(r"<[^>]*>", "", text)
 
 
+@dataclass
+class Article:
+    url: str | Text
+    text: str | Text
+    title: str | Text
+
+
+@dataclass
+class ArticleConfig:
+    sitename: str
+    url: str
+    url_desc: str
+    time: time.struct_time
+    translate: dict[str, str]
+
+
 def print_message(site_name: str, url: str, text: str) -> None:
     logger.debug(
         f"\n\t{site_name=} \
@@ -245,7 +261,7 @@ def send_mes(text: Text | str) -> bool:
     params["parse_mode"] = "HTML"
     params["disable_web_page_preview"] = True
     params["disable_notification"] = False
-    params["text"] = text
+    params["text"] = text  # type: ignore
     logger.debug(params)
 
     response = requests.post(TELEGRAM_LINK, params=params).json()
@@ -258,7 +274,7 @@ def send_mes(text: Text | str) -> bool:
     return True
 
 
-def format_news(site_name: str, article: SimpleNamespace) -> str:
+def format_news(site_name: str, article: Article) -> str:
     return f"<a href='{article.url}'>{site_name}</a>: <b>{article.title}</b>\n\n{article.text}"
 
 
@@ -305,12 +321,12 @@ def parse_title(title: str) -> Text:
 
 def parse(
     url_desc: str, url: str, previous_time: time.struct_time
-) -> tuple[list[SimpleNamespace] | list, time.struct_time]:
+) -> tuple[list[Article] | list, time.struct_time]:
     """returns SimpleNamespace(link, title, text), time"""
 
     if articles := make_request(url, url_desc):
         logger.success(url_desc)
-        to_return: list[SimpleNamespace] = []
+        to_return: list[Article] = []
 
         for article in reversed(articles[: len(articles) // 3]):
             if (time := article["published_parsed"]) > previous_time:
@@ -322,7 +338,7 @@ def parse(
                 )
                 text = parse_text(article["summary"], url_desc)
 
-                to_return.append(SimpleNamespace(url=link, title=title, text=text))
+                to_return.append(Article(url=link, title=title, text=text))
 
                 previous_time = time
 
@@ -347,7 +363,7 @@ def get_time_of_last_article(*, url: str, url_desc: str) -> time.struct_time | N
     return None
 
 
-def translate_text(text: str, from_lang: str, to_lang: str) -> str:
+def translate_text(text: str | Text, from_lang: str, to_lang: str) -> str:
     return translator.translate_text(text, source_lang=from_lang, target_lang=to_lang).text  # type: ignore
 
 
@@ -370,8 +386,8 @@ def check_translator_usage() -> None:
     return
 
 
-def load_urls() -> tuple[SimpleNamespace, ...]:
-    news_items: list[SimpleNamespace] = []
+def load_urls() -> tuple[ArticleConfig, ...]:
+    news_items: list[ArticleConfig] = []
 
     with open(CONFIG_FILE, "r") as f:
         sites: dict[str, dict] = yaml.safe_load(f)
@@ -391,8 +407,10 @@ def load_urls() -> tuple[SimpleNamespace, ...]:
                 continue
 
             time = get_time_of_last_article(url=url["url"], url_desc=url["name"])
+            if not time:
+                continue
             news_items.append(
-                SimpleNamespace(
+                ArticleConfig(
                     sitename=sitename,
                     url=url["url"],
                     url_desc=url["name"],
@@ -447,7 +465,7 @@ def main() -> None:
     logger.info("All done!")
 
 
-def quit(signo, _frame):  # type: ignore
+def quit(signo, _frame):
     logger.info("Interrupted by %d, shutting down" % signo)
     exit.set()
 

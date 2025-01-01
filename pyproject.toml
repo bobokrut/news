@@ -30,7 +30,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 target-version = ["py310"]
 
-[tool.pyright]
+[tool.basedpyright]
 typeCheckingMode = "basic"
 venvPath = "/home/bobokrut/.cache/pypoetry/virtualenvs"
 venv = "news-VBAa4j2y-py3.10"
